@@ -65,24 +65,32 @@
             const pageInfo = document.getElementById('pageInfo');
 
             let allData = [];
+            let dataLoaded = false;
+            let isLoading = false;
             let currentPage = 1;
             const ITEMS_PER_PAGE = 15;
             let isTableView = false;
 
-            // ---------- Fetch data ----------
+            // ---------- Fetch data silently ----------
             async function fetchAllData() {
+                if (dataLoaded) return allData;
+                if (isLoading) return allData;
+
+                isLoading = true;
                 try {
                     const response = await fetch(API_URL);
                     const data = await response.json();
                     
                     if (Array.isArray(data)) {
                         allData = data;
+                        dataLoaded = true;
                         return data;
                     } else if (data && typeof data === 'object') {
                         const values = Object.values(data);
                         for (let val of values) {
                             if (Array.isArray(val)) {
                                 allData = val;
+                                dataLoaded = true;
                                 return val;
                             }
                         }
@@ -92,6 +100,8 @@
                 } catch (error) {
                     console.error('Fetch error:', error);
                     return null;
+                } finally {
+                    isLoading = false;
                 }
             }
 
@@ -250,22 +260,20 @@
             }
 
             // ---------- Toggle between views ----------
-            function toggleView() {
+            async function toggleView() {
                 if (!isTableView) {
                     // Switch to table view
-                    if (allData.length === 0) {
+                    if (!dataLoaded) {
                         tableBody.innerHTML = `<tr><td colspan="8" style="text-align:center;">Loading...</td></tr>`;
-                        fetchAllData().then(data => {
-                            if (data && data.length > 0) {
-                                renderTableView(1);
-                            } else {
-                                tableBody.innerHTML = `<tr><td colspan="8" style="text-align:center;">No data available</td></tr>`;
-                            }
-                        });
-                    } else {
-                        renderTableView(1);
+                        await fetchAllData();
                     }
                     
+                    if (allData.length === 0) {
+                        tableBody.innerHTML = `<tr><td colspan="8" style="text-align:center;">No data available</td></tr>`;
+                        return;
+                    }
+                    
+                    renderTableView(1);
                     blockView.style.display = 'none';
                     tableView.style.display = 'block';
                     toggleAllBtn.textContent = 'Hide All';
@@ -277,20 +285,14 @@
                     toggleAllBtn.textContent = 'Show All';
                     isTableView = false;
                     
-                    // If there's a search query, show search results
-                    const query = searchInput.value;
-                    if (query) {
-                        const results = searchData(query);
-                        renderBlockView(results, query);
-                    } else {
-                        // Show all in block view
-                        renderBlockView(allData, '');
-                    }
+                    // Clear block view
+                    blockView.innerHTML = '';
+                    searchStats.textContent = '';
                 }
             }
 
             // ---------- Handle search ----------
-            function handleSearch(e) {
+            async function handleSearch(e) {
                 e.preventDefault();
                 
                 // If table view is active, switch to block view
@@ -298,7 +300,21 @@
                     toggleView();
                 }
 
-                const query = searchInput.value;
+                const query = searchInput.value.trim();
+                
+                // If search is empty, clear results
+                if (!query) {
+                    blockView.innerHTML = '';
+                    searchStats.textContent = '';
+                    return;
+                }
+
+                // Load data silently if not loaded
+                if (!dataLoaded) {
+                    blockView.innerHTML = 'Searching...';
+                    await fetchAllData();
+                }
+
                 const results = searchData(query);
                 renderBlockView(results, query);
             }
@@ -317,17 +333,14 @@
                 }
             }
 
-            // ---------- Load initial data ----------
-            async function loadInitialData() {
-                blockView.innerHTML = 'Loading...';
-                const data = await fetchAllData();
-                
-                if (!data || data.length === 0) {
-                    blockView.innerHTML = 'No data available';
-                    return;
-                }
-
-                renderBlockView(data, '');
+            // ---------- Silently load data in background ----------
+            function silentLoad() {
+                // Load data in background without showing anything
+                fetchAllData().then(data => {
+                    if (data && data.length > 0) {
+                        console.log(`Silently loaded ${data.length} records`);
+                    }
+                });
             }
 
             // ---------- Event listeners ----------
@@ -336,8 +349,16 @@
             prevBtn.addEventListener('click', prevPage);
             nextBtn.addEventListener('click', nextPage);
 
-            // ---------- Initialize ----------
-            loadInitialData();
+            // ---------- Initialize - silent background load ----------
+            silentLoad();
+
+            // Optional: reload data when page becomes visible (for sync updates)
+            document.addEventListener('visibilitychange', function() {
+                if (!document.hidden) {
+                    // Silently reload in background when user returns to tab
+                    silentLoad();
+                }
+            });
 
         })();
     </script>
