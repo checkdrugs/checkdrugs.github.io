@@ -99,3 +99,164 @@ button:hover {
     font-family: monospace;
     font-size: 0.8rem;
 }
+
+/* --- Shared / existing styles --- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+body {
+    background: #f2f4f6;
+    min-height: 100vh;
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    padding: 2rem;
+}
+
+/* --- Search Container --- */
+.search-container {
+    max-width: 900px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 0.75rem;
+    padding: 2rem 2.5rem;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+    border: 1px solid #dce1e6;
+}
+
+/* --- Header --- */
+.search-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #e9edf2;
+    padding-bottom: 1rem;
+    margin-bottom: 1.5rem;
+}
+.search-header h1 {
+    font-weight: 450;
+    font-size: 1.6rem;
+    color: #1e2b37;
+}
+.logout-btn {
+    color: #4f5b66;
+    text-decoration: none;
+    font-size: 0.9rem;
+    padding: 0.4rem 1rem;
+    border: 1px solid #dce1e6;
+    border-radius: 2rem;
+    transition: 0.15s;
+}
+.logout-btn:hover {
+    background: #f2f4f6;
+    border-color: #b0b8c0;
+}
+
+/* --- Search Bar --- */
+.search-bar-wrapper {
+    margin-bottom: 2rem;
+}
+#searchForm {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+#searchInput {
+    flex: 1;
+    padding: 0.7rem 1rem;
+    font-size: 1rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 0.5rem;
+    background: white;
+    transition: 0.15s;
+}
+#searchInput:focus {
+    outline: none;
+    border-color: #4b7b9e;
+    box-shadow: 0 0 0 3px rgba(55, 100, 140, 0.15);
+}
+#searchForm button {
+    padding: 0.7rem 2rem;
+    background: #1e2b37;
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: 0.2s;
+    white-space: nowrap;
+}
+#searchForm button:hover {
+    background: #14212b;
+}
+.search-stats {
+    font-size: 0.85rem;
+    color: #5e6e7e;
+    min-height: 1.5rem;
+}
+
+/* --- Results --- */
+#resultsContainer {
+    margin-top: 0.5rem;
+}
+.result-item {
+    background: #f8fafc;
+    border-left: 4px solid #4b7b9e;
+    padding: 1rem 1.5rem;
+    margin-bottom: 1rem;
+    border-radius: 0.4rem;
+    border: 1px solid #e9edf2;
+    border-left-width: 4px;
+    transition: 0.1s;
+}
+.result-item:hover {
+    background: #f1f4f8;
+}
+.result-item .drug-name {
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: #1e2b37;
+    margin-bottom: 0.2rem;
+}
+.result-item .drug-detail {
+    color: #2d3a47;
+    font-size: 0.95rem;
+    margin: 0.1rem 0;
+}
+.result-item .drug-detail strong {
+    font-weight: 500;
+    color: #1e2b37;
+}
+.result-item .balance {
+    display: inline-block;
+    margin-top: 0.3rem;
+    background: #e9edf2;
+    padding: 0.15rem 0.8rem;
+    border-radius: 2rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #1e2b37;
+}
+.result-item .related {
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px dashed #dce1e6;
+    color: #4f5b66;
+    font-size: 0.9rem;
+}
+.result-item .related strong {
+    font-weight: 500;
+    color: #1e2b37;
+}
+.no-results {
+    text-align: center;
+    color: #5e6e7e;
+    padding: 3rem 0;
+    font-size: 1.05rem;
+}
+.loading {
+    text-align: center;
+    color: #4f5b66;
+    padding: 2rem 0;
+    font-size: 0.95rem;
+}
