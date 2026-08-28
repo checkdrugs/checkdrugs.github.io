@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login · Sync Master</title>
+
+    <!-- External CSS -->
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div class="login-card">
+    <h1>⏺ Sync Master</h1>
+    <div class="subhead">Local → Online Master</div>
+
+    <!-- login form -->
+    <form id="loginForm">
+        <div class="field">
+            <label for="username">Username</label>
+            <input type="text" id="username" value="admin" placeholder="admin" />
+        </div>
+        <div class="field">
+            <label for="password">Password</label>
+            <input type="password" id="password" value="solo" placeholder="solo" />
+        </div>
+
+        <button type="submit">→ Access dashboard</button>
+        <div id="loginError" class="error-msg"></div>
+    </form>
+
+    <div class="footnote">
+        <span>default: admin / solo</span>
+    </div>
+</div>
+
+<!-- External JavaScript -->
+<script src="script.js"></script>
+
+</body>
+</html>
