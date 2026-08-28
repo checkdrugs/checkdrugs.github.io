@@ -33,6 +33,8 @@
 })();
 
 (function() {
+    console.log('search.js loaded successfully');
+
     // ---------- configuration ----------
     // Replace with your actual Apps Script web app URL
     const API_URL = 'https://script.google.com/macros/s/AKfycbzzKAmnfCe9O7I56Tb8Fnye-2-GMvpGkyYR574E7uULX2wao9lK77Z9jn6WOiPCZzru/exec';
@@ -43,9 +45,15 @@
     const resultsContainer = document.getElementById('resultsContainer');
     const searchStats = document.getElementById('searchStats');
 
+    console.log('Search form:', searchForm);
+    console.log('Search input:', searchInput);
+    console.log('Results container:', resultsContainer);
+
     // ---------- fetch all data from Google Sheet ----------
     async function fetchAllData() {
         try {
+            console.log('Fetching data from:', API_URL);
+            
             const response = await fetch(API_URL, {
                 method: 'GET',
                 headers: {
@@ -53,11 +61,19 @@
                 }
             });
 
+            console.log('Response status:', response.status);
+            console.log('Response ok?', response.ok);
+
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
 
             const data = await response.json();
+            console.log('Data received:', data);
+            console.log('Data type:', typeof data);
+            console.log('Is array?', Array.isArray(data));
+            console.log('Data length:', data ? data.length : 'null/undefined');
+            
             return data;
         } catch (error) {
             console.error('Fetch error:', error);
@@ -67,12 +83,23 @@
 
     // ---------- search/filter data ----------
     function searchData(data, query) {
-        if (!data || !data.length) return [];
-        if (!query || query.trim() === '') return data;
+        console.log('Searching data with query:', query);
+        console.log('Data to search:', data);
+        
+        if (!data || !data.length) {
+            console.log('No data or empty array');
+            return [];
+        }
+        
+        if (!query || query.trim() === '') {
+            console.log('Empty query, returning all data');
+            return data;
+        }
 
         const lowerQuery = query.toLowerCase().trim();
+        console.log('Lowercase query:', lowerQuery);
         
-        return data.filter(row => {
+        const results = data.filter(row => {
             // row structure: [ID, Drug Class, Drug, Active Ingredients, Presentation Size, Form, What It Treats, Balance]
             const id = (row[0] || '').toLowerCase();
             const drugClass = (row[1] || '').toLowerCase();
@@ -81,17 +108,28 @@
             const form = (row[5] || '').toLowerCase();
             const treats = (row[6] || '').toLowerCase();
 
-            return id.includes(lowerQuery) ||
-                   drugClass.includes(lowerQuery) ||
-                   drug.includes(lowerQuery) ||
-                   ingredients.includes(lowerQuery) ||
-                   form.includes(lowerQuery) ||
-                   treats.includes(lowerQuery);
+            const matches = id.includes(lowerQuery) ||
+                           drugClass.includes(lowerQuery) ||
+                           drug.includes(lowerQuery) ||
+                           ingredients.includes(lowerQuery) ||
+                           form.includes(lowerQuery) ||
+                           treats.includes(lowerQuery);
+            
+            if (matches) {
+                console.log('Match found:', row);
+            }
+            
+            return matches;
         });
+        
+        console.log('Search results count:', results.length);
+        return results;
     }
 
     // ---------- render results ----------
     function renderResults(results, query) {
+        console.log('Rendering results:', results);
+        
         if (!results || results.length === 0) {
             resultsContainer.innerHTML = `
                 <div class="no-results">
@@ -104,7 +142,9 @@
         }
 
         let html = '';
-        results.forEach(row => {
+        results.forEach((row, index) => {
+            console.log(`Row ${index}:`, row);
+            
             const id = row[0] || '';
             const drugClass = row[1] || '';
             const drug = row[2] || '';
@@ -117,7 +157,7 @@
             // Build the result item
             html += `
                 <div class="result-item">
-                    <div class="drug-name">${drug}</div>
+                    <div class="drug-name">${drug || 'Unnamed Drug'}</div>
                     ${ingredients ? `<div class="drug-detail"><strong>Ingredients:</strong> ${ingredients}</div>` : ''}
                     ${form ? `<div class="drug-detail"><strong>Form:</strong> ${form}</div>` : ''}
                     ${presentation ? `<div class="drug-detail"><strong>Presentation:</strong> ${presentation}</div>` : ''}
@@ -135,9 +175,11 @@
 
     // ---------- handle search ----------
     async function handleSearch(e) {
+        console.log('Search form submitted');
         e.preventDefault();
 
         const query = searchInput.value;
+        console.log('Search query:', query);
         
         // Show loading state
         resultsContainer.innerHTML = '<div class="loading">⏳ Searching...</div>';
@@ -147,13 +189,15 @@
         const data = await fetchAllData();
 
         if (!data) {
+            console.error('No data received from server');
             resultsContainer.innerHTML = `
                 <div class="no-results">
                     <p>⚠️ Error connecting to the server</p>
                     <p style="margin-top: 0.5rem; font-size: 0.9rem; color: #7a8a9a;">Please check your connection and try again</p>
+                    <p style="margin-top: 0.5rem; font-size: 0.8rem; color: #7a8a9a;">API URL: ${API_URL}</p>
                 </div>
             `;
-            searchStats.textContent = '';
+            searchStats.textContent = 'Connection error';
             return;
         }
 
@@ -166,82 +210,38 @@
 
     // ---------- load all data on page load (show initial results) ----------
     async function loadInitialData() {
+        console.log('Loading initial data...');
         resultsContainer.innerHTML = '<div class="loading">⏳ Loading data...</div>';
         
         const data = await fetchAllData();
         
         if (!data) {
+            console.error('Could not load data');
             resultsContainer.innerHTML = `
                 <div class="no-results">
                     <p>⚠️ Could not load data</p>
                     <p style="margin-top: 0.5rem; font-size: 0.9rem; color: #7a8a9a;">Please check your connection and refresh</p>
+                    <p style="margin-top: 0.5rem; font-size: 0.8rem; color: #7a8a9a;">API URL: ${API_URL}</p>
                 </div>
             `;
             return;
         }
 
+        console.log('Initial data loaded:', data);
         // Show all data initially (empty search)
         renderResults(data, '');
         searchInput.placeholder = 'Search by drug name, ID, active ingredients...';
     }
 
     // ---------- event listeners ----------
-    searchForm.addEventListener('submit', handleSearch);
+    if (searchForm) {
+        searchForm.addEventListener('submit', handleSearch);
+        console.log('Search form event listener attached');
+    } else {
+        console.error('Search form not found!');
+    }
 
     // ---------- initialize ----------
     loadInitialData();
 
-})();
-
-(function() {
-    console.log('login.js loaded successfully'); // Debug: confirm script loaded
-
-    // ---------- hardcoded credentials ----------
-    const DEFAULT_USER = 'admin';
-    const DEFAULT_PASS = 'solo';
-
-    // DOM refs
-    const form = document.getElementById('loginForm');
-    const usernameInput = document.getElementById('username');
-    const passwordInput = document.getElementById('password');
-    const errorEl = document.getElementById('loginError');
-
-    // Debug: check if elements are found
-    console.log('Form element:', form);
-    console.log('Username input:', usernameInput);
-    console.log('Password input:', passwordInput);
-
-    // ---------- login handler ----------
-    function handleLogin(e) {
-        console.log('Login form submitted'); // Debug: confirm form submission
-
-        e.preventDefault(); // prevent page reload
-
-        const user = usernameInput.value.trim();
-        const pass = passwordInput.value.trim();
-
-        console.log('Username entered:', user);
-        console.log('Password entered:', pass);
-
-        // reset previous error
-        errorEl.textContent = '';
-
-        // check credentials
-        if (user === DEFAULT_USER && pass === DEFAULT_PASS) {
-            console.log('Login successful! Redirecting to search.html');
-            // redirect to search.html
-            window.location.href = 'search.html';
-        } else {
-            console.log('Login failed - invalid credentials');
-            errorEl.textContent = '⛔ invalid username or password';
-        }
-    }
-
-    // attach event listener
-    if (form) {
-        form.addEventListener('submit', handleLogin);
-        console.log('Event listener attached to form');
-    } else {
-        console.error('Form not found! Check your HTML.');
-    }
 })();
