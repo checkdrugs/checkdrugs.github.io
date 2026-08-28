@@ -10,12 +10,39 @@
     <h1>Search Online Master</h1>
     <a href="index.html">← Logout</a>
 
-    <form id="searchForm" style="display:inline;">
-        <input type="text" id="searchInput" placeholder="Search..." />
-        <button type="submit">Search</button>
+    <!-- Search Form -->
+    <form id="searchForm" style="margin:10px 0;">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+            <input type="text" id="searchInput" placeholder="Search..." style="padding:5px;width:200px;" />
+            <button type="submit">Search</button>
+        </div>
+        
+        <div style="margin-top:10px;display:flex;gap:20px;flex-wrap:wrap;align-items:center;">
+            <!-- Search by Name checkbox -->
+            <label>
+                <input type="checkbox" id="searchByName" checked />
+                Search by Name
+            </label>
+            
+            <!-- Search by Form dropdown -->
+            <div>
+                <label>Form: 
+                    <select id="formFilter" style="padding:5px;">
+                        <option value="">All Forms</option>
+                    </select>
+                </label>
+            </div>
+            
+            <!-- Search by What It Treats -->
+            <div>
+                <label>Treats: 
+                    <input type="text" id="treatsFilter" placeholder="e.g., malaria, bacteria..." style="padding:5px;width:200px;" />
+                </label>
+            </div>
+        </div>
     </form>
-    <button id="toggleAllBtn">Show All</button>
 
+    <button id="toggleAllBtn">Show All</button>
     <div id="searchStats"></div>
 
     <!-- Block view for search results -->
@@ -55,6 +82,9 @@
 
             const searchForm = document.getElementById('searchForm');
             const searchInput = document.getElementById('searchInput');
+            const searchByName = document.getElementById('searchByName');
+            const formFilter = document.getElementById('formFilter');
+            const treatsFilter = document.getElementById('treatsFilter');
             const searchStats = document.getElementById('searchStats');
             const blockView = document.getElementById('blockView');
             const tableView = document.getElementById('tableView');
@@ -84,6 +114,8 @@
                     if (Array.isArray(data)) {
                         allData = data;
                         dataLoaded = true;
+                        // Populate form dropdown after data loads
+                        populateFormDropdown();
                         return data;
                     } else if (data && typeof data === 'object') {
                         const values = Object.values(data);
@@ -91,6 +123,7 @@
                             if (Array.isArray(val)) {
                                 allData = val;
                                 dataLoaded = true;
+                                populateFormDropdown();
                                 return val;
                             }
                         }
@@ -105,13 +138,53 @@
                 }
             }
 
-            // ---------- Search/filter data ----------
-            function searchData(query) {
-                if (!allData || !allData.length) return [];
-                if (!query || query.trim() === '') return allData;
-
-                const lowerQuery = query.toLowerCase().trim();
+            // ---------- Populate form dropdown with unique forms ----------
+            function populateFormDropdown() {
+                if (!allData || allData.length === 0) return;
                 
+                const forms = new Set();
+                allData.forEach(row => {
+                    let form = '';
+                    if (Array.isArray(row)) {
+                        form = row[5] || '';
+                    } else if (typeof row === 'object') {
+                        form = row.Form || row.form || row[5] || '';
+                    }
+                    if (form) forms.add(form);
+                });
+
+                // Clear existing options (keep "All Forms")
+                formFilter.innerHTML = '<option value="">All Forms</option>';
+                
+                // Add unique forms sorted alphabetically
+                const sortedForms = Array.from(forms).sort();
+                sortedForms.forEach(form => {
+                    const option = document.createElement('option');
+                    option.value = form;
+                    option.textContent = form;
+                    formFilter.appendChild(option);
+                });
+            }
+
+            // ---------- Get value from row ----------
+            function getRowValue(row, index, key) {
+                if (Array.isArray(row)) {
+                    return row[index] || '';
+                } else if (typeof row === 'object') {
+                    return row[key] || row[index] || '';
+                }
+                return '';
+            }
+
+            // ---------- Search/filter data ----------
+            function searchData() {
+                if (!allData || !allData.length) return [];
+
+                const nameQuery = searchInput.value.trim();
+                const searchByNameEnabled = searchByName.checked;
+                const selectedForm = formFilter.value;
+                const treatsQuery = treatsFilter.value.trim();
+
                 return allData.filter(row => {
                     let id, drugClass, drug, ingredients, form, treats;
                     
@@ -120,32 +193,54 @@
                         drugClass = (row[1] || '').toString().toLowerCase();
                         drug = (row[2] || '').toString().toLowerCase();
                         ingredients = (row[3] || '').toString().toLowerCase();
-                        form = (row[5] || '').toString().toLowerCase();
+                        form = (row[5] || '').toString();
                         treats = (row[6] || '').toString().toLowerCase();
                     } else if (typeof row === 'object') {
                         id = (row.ID || row.id || row[0] || '').toString().toLowerCase();
                         drugClass = (row['Drug Class'] || row.drugClass || row[1] || '').toString().toLowerCase();
                         drug = (row.Drug || row.drug || row[2] || '').toString().toLowerCase();
                         ingredients = (row['Active Ingredients'] || row.ingredients || row[3] || '').toString().toLowerCase();
-                        form = (row.Form || row.form || row[5] || '').toString().toLowerCase();
+                        form = (row.Form || row.form || row[5] || '').toString();
                         treats = (row['What It Treats'] || row.treats || row[6] || '').toString().toLowerCase();
                     } else {
                         return false;
                     }
 
-                    return id.includes(lowerQuery) ||
-                           drugClass.includes(lowerQuery) ||
-                           drug.includes(lowerQuery) ||
-                           ingredients.includes(lowerQuery) ||
-                           form.includes(lowerQuery) ||
-                           treats.includes(lowerQuery);
+                    // Search by name (if checkbox is checked)
+                    let nameMatch = true;
+                    if (searchByNameEnabled && nameQuery) {
+                        nameMatch = drug.includes(nameQuery) || 
+                                   ingredients.includes(nameQuery) ||
+                                   drugClass.includes(nameQuery);
+                    }
+
+                    // Form filter
+                    let formMatch = true;
+                    if (selectedForm) {
+                        formMatch = form === selectedForm;
+                    }
+
+                    // Treats filter (search within treats field)
+                    let treatsMatch = true;
+                    if (treatsQuery) {
+                        // Split treats query by commas, spaces, or semicolons
+                        const searchTerms = treatsQuery.split(/[,;\s]+/).filter(t => t.length > 0);
+                        treatsMatch = searchTerms.some(term => {
+                            const lowerTerm = term.toLowerCase();
+                            return treats.includes(lowerTerm);
+                        });
+                    }
+
+                    return nameMatch && formMatch && treatsMatch;
                 });
             }
 
-            // ---------- Render block view (search results) ----------
-            function renderBlockView(results, query) {
+            // ---------- Render block view ----------
+            function renderBlockView(results) {
+                const query = searchInput.value.trim();
+                
                 if (!results || results.length === 0) {
-                    blockView.innerHTML = `<p>No results found for "${query || ''}"</p>`;
+                    blockView.innerHTML = `<p>No results found</p>`;
                     searchStats.textContent = '0 results';
                     return;
                 }
@@ -192,7 +287,7 @@
                 searchStats.textContent = `${results.length} results (${allData.length} total)`;
             }
 
-            // ---------- Render table view (all data) ----------
+            // ---------- Render table view ----------
             function renderTableView(page = 1) {
                 const totalPages = Math.ceil(allData.length / ITEMS_PER_PAGE) || 1;
                 
@@ -204,15 +299,12 @@
                 const end = Math.min(start + ITEMS_PER_PAGE, allData.length);
                 const pageItems = allData.slice(start, end);
 
-                // Update stats
                 searchStats.textContent = `Showing ${start + 1}-${end} of ${allData.length} records`;
 
-                // Update pagination info
                 pageInfo.textContent = `Page ${page} of ${totalPages}`;
                 prevBtn.disabled = page <= 1;
                 nextBtn.disabled = page >= totalPages;
 
-                // Build table rows
                 if (pageItems.length === 0) {
                     tableBody.innerHTML = `<tr><td colspan="8" style="text-align:center;">No data available</td></tr>`;
                     return;
@@ -262,7 +354,6 @@
             // ---------- Toggle between views ----------
             async function toggleView() {
                 if (!isTableView) {
-                    // Switch to table view
                     if (!dataLoaded) {
                         tableBody.innerHTML = `<tr><td colspan="8" style="text-align:center;">Loading...</td></tr>`;
                         await fetchAllData();
@@ -279,13 +370,10 @@
                     toggleAllBtn.textContent = 'Hide All';
                     isTableView = true;
                 } else {
-                    // Switch to block view
                     blockView.style.display = 'block';
                     tableView.style.display = 'none';
                     toggleAllBtn.textContent = 'Show All';
                     isTableView = false;
-                    
-                    // Clear block view
                     blockView.innerHTML = '';
                     searchStats.textContent = '';
                 }
@@ -295,28 +383,28 @@
             async function handleSearch(e) {
                 e.preventDefault();
                 
-                // If table view is active, switch to block view
                 if (isTableView) {
                     toggleView();
                 }
 
-                const query = searchInput.value.trim();
-                
-                // If search is empty, clear results
-                if (!query) {
+                // Check if any filters are active
+                const hasName = searchInput.value.trim() && searchByName.checked;
+                const hasForm = formFilter.value;
+                const hasTreats = treatsFilter.value.trim();
+
+                if (!hasName && !hasForm && !hasTreats) {
                     blockView.innerHTML = '';
-                    searchStats.textContent = '';
+                    searchStats.textContent = 'Please enter search criteria';
                     return;
                 }
 
-                // Load data silently if not loaded
                 if (!dataLoaded) {
                     blockView.innerHTML = 'Searching...';
                     await fetchAllData();
                 }
 
-                const results = searchData(query);
-                renderBlockView(results, query);
+                const results = searchData();
+                renderBlockView(results);
             }
 
             // ---------- Pagination navigation ----------
@@ -333,9 +421,8 @@
                 }
             }
 
-            // ---------- Silently load data in background ----------
+            // ---------- Silent load ----------
             function silentLoad() {
-                // Load data in background without showing anything
                 fetchAllData().then(data => {
                     if (data && data.length > 0) {
                         console.log(`Silently loaded ${data.length} records`);
@@ -349,13 +436,24 @@
             prevBtn.addEventListener('click', prevPage);
             nextBtn.addEventListener('click', nextPage);
 
-            // ---------- Initialize - silent background load ----------
+            // Auto-search when form dropdown or treats filter changes
+            formFilter.addEventListener('change', handleSearch);
+            treatsFilter.addEventListener('input', function() {
+                // Optional: auto-search on type with debounce
+                clearTimeout(this._timer);
+                this._timer = setTimeout(() => {
+                    if (this.value.length >= 2 || this.value.length === 0) {
+                        handleSearch(new Event('submit'));
+                    }
+                }, 500);
+            });
+
+            // ---------- Initialize ----------
             silentLoad();
 
-            // Optional: reload data when page becomes visible (for sync updates)
+            // Reload when tab becomes visible
             document.addEventListener('visibilitychange', function() {
                 if (!document.hidden) {
-                    // Silently reload in background when user returns to tab
                     silentLoad();
                 }
             });
