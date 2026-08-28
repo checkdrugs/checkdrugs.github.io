@@ -192,3 +192,56 @@
     loadInitialData();
 
 })();
+
+(function() {
+    console.log('login.js loaded successfully'); // Debug: confirm script loaded
+
+    // ---------- hardcoded credentials ----------
+    const DEFAULT_USER = 'admin';
+    const DEFAULT_PASS = 'solo';
+
+    // DOM refs
+    const form = document.getElementById('loginForm');
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
+    const errorEl = document.getElementById('loginError');
+
+    // Debug: check if elements are found
+    console.log('Form element:', form);
+    console.log('Username input:', usernameInput);
+    console.log('Password input:', passwordInput);
+
+    // ---------- login handler ----------
+    function handleLogin(e) {
+        console.log('Login form submitted'); // Debug: confirm form submission
+
+        e.preventDefault(); // prevent page reload
+
+        const user = usernameInput.value.trim();
+        const pass = passwordInput.value.trim();
+
+        console.log('Username entered:', user);
+        console.log('Password entered:', pass);
+
+        // reset previous error
+        errorEl.textContent = '';
+
+        // check credentials
+        if (user === DEFAULT_USER && pass === DEFAULT_PASS) {
+            console.log('Login successful! Redirecting to search.html');
+            // redirect to search.html
+            window.location.href = 'search.html';
+        } else {
+            console.log('Login failed - invalid credentials');
+            errorEl.textContent = '⛔ invalid username or password';
+        }
+    }
+
+    // attach event listener
+    if (form) {
+        form.addEventListener('submit', handleLogin);
+        console.log('Event listener attached to form');
+    } else {
+        console.error('Form not found! Check your HTML.');
+    }
+})();
