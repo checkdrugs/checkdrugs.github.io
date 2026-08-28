@@ -13,30 +13,29 @@
     <!-- Search Form -->
     <form id="searchForm" style="margin:10px 0;">
         <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
-            <input type="text" id="searchInput" placeholder="Search..." style="padding:5px;width:200px;" />
+            <input type="text" id="searchInput" placeholder="Search..." style="padding:5px;width:300px;" />
             <button type="submit">Search</button>
         </div>
         
         <div style="margin-top:10px;display:flex;gap:20px;flex-wrap:wrap;align-items:center;">
-            <!-- Search by Name checkbox -->
+            <!-- Search by Drug Name checkbox -->
             <label>
                 <input type="checkbox" id="searchByName" checked />
-                Search by Name
+                Search by Drug Name
             </label>
             
-            <!-- Search by Form dropdown -->
+            <!-- Search by What It Treats checkbox -->
+            <label>
+                <input type="checkbox" id="searchByTreats" checked />
+                Search by What It Treats
+            </label>
+            
+            <!-- Form filter (dropdown) -->
             <div>
-                <label>Form: 
+                <label>Form Filter: 
                     <select id="formFilter" style="padding:5px;">
                         <option value="">All Forms</option>
                     </select>
-                </label>
-            </div>
-            
-            <!-- Search by What It Treats -->
-            <div>
-                <label>Treats: 
-                    <input type="text" id="treatsFilter" placeholder="e.g., malaria, bacteria..." style="padding:5px;width:200px;" />
                 </label>
             </div>
         </div>
@@ -83,8 +82,8 @@
             const searchForm = document.getElementById('searchForm');
             const searchInput = document.getElementById('searchInput');
             const searchByName = document.getElementById('searchByName');
+            const searchByTreats = document.getElementById('searchByTreats');
             const formFilter = document.getElementById('formFilter');
-            const treatsFilter = document.getElementById('treatsFilter');
             const searchStats = document.getElementById('searchStats');
             const blockView = document.getElementById('blockView');
             const tableView = document.getElementById('tableView');
@@ -114,7 +113,6 @@
                     if (Array.isArray(data)) {
                         allData = data;
                         dataLoaded = true;
-                        // Populate form dropdown after data loads
                         populateFormDropdown();
                         return data;
                     } else if (data && typeof data === 'object') {
@@ -153,10 +151,8 @@
                     if (form) forms.add(form);
                 });
 
-                // Clear existing options (keep "All Forms")
                 formFilter.innerHTML = '<option value="">All Forms</option>';
                 
-                // Add unique forms sorted alphabetically
                 const sortedForms = Array.from(forms).sort();
                 sortedForms.forEach(form => {
                     const option = document.createElement('option');
@@ -166,72 +162,81 @@
                 });
             }
 
-            // ---------- Get value from row ----------
-            function getRowValue(row, index, key) {
-                if (Array.isArray(row)) {
-                    return row[index] || '';
-                } else if (typeof row === 'object') {
-                    return row[key] || row[index] || '';
-                }
-                return '';
-            }
-
             // ---------- Search/filter data ----------
             function searchData() {
                 if (!allData || !allData.length) return [];
 
-                const nameQuery = searchInput.value.trim();
-                const searchByNameEnabled = searchByName.checked;
+                const query = searchInput.value.trim().toLowerCase();
                 const selectedForm = formFilter.value;
-                const treatsQuery = treatsFilter.value.trim();
+                const searchByNameEnabled = searchByName.checked;
+                const searchByTreatsEnabled = searchByTreats.checked;
+
+                // If no query and no form filter, return empty
+                if (!query && !selectedForm) return [];
 
                 return allData.filter(row => {
-                    let id, drugClass, drug, ingredients, form, treats;
+                    let drug, ingredients, drugClass, form, treats;
                     
                     if (Array.isArray(row)) {
-                        id = (row[0] || '').toString().toLowerCase();
-                        drugClass = (row[1] || '').toString().toLowerCase();
                         drug = (row[2] || '').toString().toLowerCase();
                         ingredients = (row[3] || '').toString().toLowerCase();
+                        drugClass = (row[1] || '').toString().toLowerCase();
                         form = (row[5] || '').toString();
                         treats = (row[6] || '').toString().toLowerCase();
                     } else if (typeof row === 'object') {
-                        id = (row.ID || row.id || row[0] || '').toString().toLowerCase();
-                        drugClass = (row['Drug Class'] || row.drugClass || row[1] || '').toString().toLowerCase();
                         drug = (row.Drug || row.drug || row[2] || '').toString().toLowerCase();
                         ingredients = (row['Active Ingredients'] || row.ingredients || row[3] || '').toString().toLowerCase();
+                        drugClass = (row['Drug Class'] || row.drugClass || row[1] || '').toString().toLowerCase();
                         form = (row.Form || row.form || row[5] || '').toString();
                         treats = (row['What It Treats'] || row.treats || row[6] || '').toString().toLowerCase();
                     } else {
                         return false;
                     }
 
-                    // Search by name (if checkbox is checked)
-                    let nameMatch = true;
-                    if (searchByNameEnabled && nameQuery) {
-                        nameMatch = drug.includes(nameQuery) || 
-                                   ingredients.includes(nameQuery) ||
-                                   drugClass.includes(nameQuery);
-                    }
-
-                    // Form filter
+                    // Form filter (always applied if selected)
                     let formMatch = true;
                     if (selectedForm) {
                         formMatch = form === selectedForm;
                     }
 
-                    // Treats filter (search within treats field)
+                    // If no query, only form filter applies
+                    if (!query) {
+                        return formMatch;
+                    }
+
+                    // Search by Drug Name (if checkbox is checked)
+                    let nameMatch = true;
+                    if (searchByNameEnabled) {
+                        nameMatch = drug.includes(query) || 
+                                   ingredients.includes(query) ||
+                                   drugClass.includes(query);
+                    }
+
+                    // Search by What It Treats (if checkbox is checked)
                     let treatsMatch = true;
-                    if (treatsQuery) {
-                        // Split treats query by commas, spaces, or semicolons
-                        const searchTerms = treatsQuery.split(/[,;\s]+/).filter(t => t.length > 0);
+                    if (searchByTreatsEnabled) {
+                        // Split query by commas, spaces, or semicolons
+                        const searchTerms = query.split(/[,;\s]+/).filter(t => t.length > 0);
                         treatsMatch = searchTerms.some(term => {
-                            const lowerTerm = term.toLowerCase();
-                            return treats.includes(lowerTerm);
+                            return treats.includes(term);
                         });
                     }
 
-                    return nameMatch && formMatch && treatsMatch;
+                    // If both checkboxes are unchecked, return false (no search possible)
+                    if (!searchByNameEnabled && !searchByTreatsEnabled) {
+                        return false;
+                    }
+
+                    // If only one checkbox is checked, only that constraint applies
+                    if (searchByNameEnabled && !searchByTreatsEnabled) {
+                        return nameMatch && formMatch;
+                    }
+                    if (!searchByNameEnabled && searchByTreatsEnabled) {
+                        return treatsMatch && formMatch;
+                    }
+
+                    // Both checkboxes are checked - both must match
+                    return nameMatch && treatsMatch && formMatch;
                 });
             }
 
@@ -387,14 +392,26 @@
                     toggleView();
                 }
 
-                // Check if any filters are active
-                const hasName = searchInput.value.trim() && searchByName.checked;
-                const hasForm = formFilter.value;
-                const hasTreats = treatsFilter.value.trim();
+                const query = searchInput.value.trim();
+                const searchByNameEnabled = searchByName.checked;
+                const searchByTreatsEnabled = searchByTreats.checked;
+                const selectedForm = formFilter.value;
 
-                if (!hasName && !hasForm && !hasTreats) {
+                // Check if any search criteria are active
+                const hasQuery = query.length > 0;
+                const hasFormFilter = selectedForm !== '';
+
+                // If no query and no form filter, show nothing
+                if (!hasQuery && !hasFormFilter) {
                     blockView.innerHTML = '';
-                    searchStats.textContent = 'Please enter search criteria';
+                    searchStats.textContent = 'Please enter a search term or select a form filter';
+                    return;
+                }
+
+                // If query exists but no search checkboxes are checked
+                if (hasQuery && !searchByNameEnabled && !searchByTreatsEnabled) {
+                    blockView.innerHTML = '';
+                    searchStats.textContent = 'Please check at least one search category (Drug Name or What It Treats)';
                     return;
                 }
 
@@ -436,17 +453,12 @@
             prevBtn.addEventListener('click', prevPage);
             nextBtn.addEventListener('click', nextPage);
 
-            // Auto-search when form dropdown or treats filter changes
+            // Auto-search when form dropdown changes
             formFilter.addEventListener('change', handleSearch);
-            treatsFilter.addEventListener('input', function() {
-                // Optional: auto-search on type with debounce
-                clearTimeout(this._timer);
-                this._timer = setTimeout(() => {
-                    if (this.value.length >= 2 || this.value.length === 0) {
-                        handleSearch(new Event('submit'));
-                    }
-                }, 500);
-            });
+
+            // Auto-search when checkboxes change
+            searchByName.addEventListener('change', handleSearch);
+            searchByTreats.addEventListener('change', handleSearch);
 
             // ---------- Initialize ----------
             silentLoad();
