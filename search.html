@@ -14,12 +14,15 @@
         <input type="text" id="searchInput" placeholder="Search..." />
         <button type="submit">Search</button>
     </form>
-    <button id="showAllBtn">Show All</button>
+    <button id="toggleAllBtn">Show All</button>
 
     <div id="searchStats"></div>
 
-    <!-- Table with headers -->
-    <div id="resultsContainer">
+    <!-- Block view for search results -->
+    <div id="blockView"></div>
+
+    <!-- Table view for "Show All" -->
+    <div id="tableView" style="display:none;">
         <table border="1" cellpadding="5" cellspacing="0" style="width:100%;border-collapse:collapse;font-family:monospace;font-size:13px;">
             <thead>
                 <tr style="background:#f0f0f0;font-weight:bold;">
@@ -33,17 +36,17 @@
                     <th>Balance</th>
                 </tr>
             </thead>
-            <tbody id="resultsBody">
+            <tbody id="tableBody">
                 <tr><td colspan="8" style="text-align:center;">Loading...</td></tr>
             </tbody>
         </table>
-    </div>
 
-    <!-- Pagination -->
-    <div id="pagination" style="margin-top:10px;">
-        <button id="prevBtn">← Previous</button>
-        <span id="pageInfo">Page 1 of 1</span>
-        <button id="nextBtn">Next →</button>
+        <!-- Pagination for table view -->
+        <div id="pagination" style="margin-top:10px;">
+            <button id="prevBtn">← Previous</button>
+            <span id="pageInfo">Page 1 of 1</span>
+            <button id="nextBtn">Next →</button>
+        </div>
     </div>
 
     <script>
@@ -52,9 +55,11 @@
 
             const searchForm = document.getElementById('searchForm');
             const searchInput = document.getElementById('searchInput');
-            const resultsBody = document.getElementById('resultsBody');
             const searchStats = document.getElementById('searchStats');
-            const showAllBtn = document.getElementById('showAllBtn');
+            const blockView = document.getElementById('blockView');
+            const tableView = document.getElementById('tableView');
+            const tableBody = document.getElementById('tableBody');
+            const toggleAllBtn = document.getElementById('toggleAllBtn');
             const prevBtn = document.getElementById('prevBtn');
             const nextBtn = document.getElementById('nextBtn');
             const pageInfo = document.getElementById('pageInfo');
@@ -62,7 +67,7 @@
             let allData = [];
             let currentPage = 1;
             const ITEMS_PER_PAGE = 15;
-            let currentResults = [];
+            let isTableView = false;
 
             // ---------- Fetch data ----------
             async function fetchAllData() {
@@ -127,21 +132,70 @@
                 });
             }
 
-            // ---------- Render table with pagination ----------
-            function renderTable(results, page = 1) {
-                currentResults = results;
-                const totalPages = Math.ceil(results.length / ITEMS_PER_PAGE) || 1;
+            // ---------- Render block view (search results) ----------
+            function renderBlockView(results, query) {
+                if (!results || results.length === 0) {
+                    blockView.innerHTML = `<p>No results found for "${query || ''}"</p>`;
+                    searchStats.textContent = '0 results';
+                    return;
+                }
+
+                let html = '';
+                results.forEach(row => {
+                    let id, drugClass, drug, ingredients, presentation, form, treats, balance;
+                    
+                    if (Array.isArray(row)) {
+                        id = row[0] || '';
+                        drugClass = row[1] || '';
+                        drug = row[2] || '';
+                        ingredients = row[3] || '';
+                        presentation = row[4] || '';
+                        form = row[5] || '';
+                        treats = row[6] || '';
+                        balance = row[7] || 0;
+                    } else if (typeof row === 'object') {
+                        id = row.ID || row.id || row[0] || '';
+                        drugClass = row['Drug Class'] || row.drugClass || row[1] || '';
+                        drug = row.Drug || row.drug || row[2] || '';
+                        ingredients = row['Active Ingredients'] || row.ingredients || row[3] || '';
+                        presentation = row['Presentation Size'] || row.presentation || row[4] || '';
+                        form = row.Form || row.form || row[5] || '';
+                        treats = row['What It Treats'] || row.treats || row[6] || '';
+                        balance = row.Balance || row.balance || row[7] || 0;
+                    } else {
+                        return;
+                    }
+
+                    html += `<div style="border:1px solid #ccc;padding:10px;margin:5px 0;">`;
+                    html += `<strong>${drug || 'Unnamed Drug'}</strong><br>`;
+                    if (ingredients) html += `Ingredients: ${ingredients}<br>`;
+                    if (form) html += `Form: ${form}<br>`;
+                    if (presentation) html += `Presentation: ${presentation}<br>`;
+                    if (drugClass) html += `Class: ${drugClass}<br>`;
+                    if (treats) html += `Treats: ${treats}<br>`;
+                    html += `Balance: ${balance}<br>`;
+                    if (id) html += `ID: ${id}<br>`;
+                    html += `</div>`;
+                });
+
+                blockView.innerHTML = html;
+                searchStats.textContent = `${results.length} results (${allData.length} total)`;
+            }
+
+            // ---------- Render table view (all data) ----------
+            function renderTableView(page = 1) {
+                const totalPages = Math.ceil(allData.length / ITEMS_PER_PAGE) || 1;
                 
                 if (page > totalPages) page = totalPages;
                 if (page < 1) page = 1;
                 currentPage = page;
 
                 const start = (page - 1) * ITEMS_PER_PAGE;
-                const end = Math.min(start + ITEMS_PER_PAGE, results.length);
-                const pageItems = results.slice(start, end);
+                const end = Math.min(start + ITEMS_PER_PAGE, allData.length);
+                const pageItems = allData.slice(start, end);
 
                 // Update stats
-                searchStats.textContent = `Showing ${start + 1}-${end} of ${results.length} records (${allData.length} total)`;
+                searchStats.textContent = `Showing ${start + 1}-${end} of ${allData.length} records`;
 
                 // Update pagination info
                 pageInfo.textContent = `Page ${page} of ${totalPages}`;
@@ -150,7 +204,7 @@
 
                 // Build table rows
                 if (pageItems.length === 0) {
-                    resultsBody.innerHTML = `<tr><td colspan="8" style="text-align:center;">No results found</td></tr>`;
+                    tableBody.innerHTML = `<tr><td colspan="8" style="text-align:center;">No data available</td></tr>`;
                     return;
                 }
 
@@ -192,82 +246,93 @@
                     html += `</tr>`;
                 });
 
-                resultsBody.innerHTML = html;
+                tableBody.innerHTML = html;
+            }
+
+            // ---------- Toggle between views ----------
+            function toggleView() {
+                if (!isTableView) {
+                    // Switch to table view
+                    if (allData.length === 0) {
+                        tableBody.innerHTML = `<tr><td colspan="8" style="text-align:center;">Loading...</td></tr>`;
+                        fetchAllData().then(data => {
+                            if (data && data.length > 0) {
+                                renderTableView(1);
+                            } else {
+                                tableBody.innerHTML = `<tr><td colspan="8" style="text-align:center;">No data available</td></tr>`;
+                            }
+                        });
+                    } else {
+                        renderTableView(1);
+                    }
+                    
+                    blockView.style.display = 'none';
+                    tableView.style.display = 'block';
+                    toggleAllBtn.textContent = 'Hide All';
+                    isTableView = true;
+                } else {
+                    // Switch to block view
+                    blockView.style.display = 'block';
+                    tableView.style.display = 'none';
+                    toggleAllBtn.textContent = 'Show All';
+                    isTableView = false;
+                    
+                    // If there's a search query, show search results
+                    const query = searchInput.value;
+                    if (query) {
+                        const results = searchData(query);
+                        renderBlockView(results, query);
+                    } else {
+                        // Show all in block view
+                        renderBlockView(allData, '');
+                    }
+                }
             }
 
             // ---------- Handle search ----------
-            async function handleSearch(e) {
+            function handleSearch(e) {
                 e.preventDefault();
+                
+                // If table view is active, switch to block view
+                if (isTableView) {
+                    toggleView();
+                }
+
                 const query = searchInput.value;
-                
-                if (allData.length > 0) {
-                    const results = searchData(query);
-                    renderTable(results, 1);
-                    return;
-                }
-
-                resultsBody.innerHTML = `<tr><td colspan="8" style="text-align:center;">Loading...</td></tr>`;
-                const data = await fetchAllData();
-
-                if (!data || data.length === 0) {
-                    resultsBody.innerHTML = `<tr><td colspan="8" style="text-align:center;">No data available</td></tr>`;
-                    searchStats.textContent = '0 results';
-                    return;
-                }
-
                 const results = searchData(query);
-                renderTable(results, 1);
-            }
-
-            // ---------- Show all ----------
-            async function showAll() {
-                searchInput.value = '';
-                if (allData.length > 0) {
-                    renderTable(allData, 1);
-                    return;
-                }
-
-                resultsBody.innerHTML = `<tr><td colspan="8" style="text-align:center;">Loading...</td></tr>`;
-                const data = await fetchAllData();
-                
-                if (!data || data.length === 0) {
-                    resultsBody.innerHTML = `<tr><td colspan="8" style="text-align:center;">No data available</td></tr>`;
-                    return;
-                }
-
-                renderTable(data, 1);
+                renderBlockView(results, query);
             }
 
             // ---------- Pagination navigation ----------
             function prevPage() {
                 if (currentPage > 1) {
-                    renderTable(currentResults, currentPage - 1);
+                    renderTableView(currentPage - 1);
                 }
             }
 
             function nextPage() {
-                const totalPages = Math.ceil(currentResults.length / ITEMS_PER_PAGE);
+                const totalPages = Math.ceil(allData.length / ITEMS_PER_PAGE);
                 if (currentPage < totalPages) {
-                    renderTable(currentResults, currentPage + 1);
+                    renderTableView(currentPage + 1);
                 }
             }
 
             // ---------- Load initial data ----------
             async function loadInitialData() {
-                resultsBody.innerHTML = `<tr><td colspan="8" style="text-align:center;">Loading...</td></tr>`;
+                blockView.innerHTML = 'Loading...';
                 const data = await fetchAllData();
                 
                 if (!data || data.length === 0) {
-                    resultsBody.innerHTML = `<tr><td colspan="8" style="text-align:center;">No data available</td></tr>`;
+                    blockView.innerHTML = 'No data available';
                     return;
                 }
 
-                renderTable(data, 1);
+                renderBlockView(data, '');
             }
 
             // ---------- Event listeners ----------
             searchForm.addEventListener('submit', handleSearch);
-            showAllBtn.addEventListener('click', showAll);
+            toggleAllBtn.addEventListener('click', toggleView);
             prevBtn.addEventListener('click', prevPage);
             nextBtn.addEventListener('click', nextPage);
 
