@@ -21,7 +21,7 @@
 
         // check credentials
         if (user === DEFAULT_USER && pass === DEFAULT_PASS) {
-            // redirect to search.html (placeholder)
+            // redirect to search.html
             window.location.href = 'search.html';
         } else {
             errorEl.textContent = '⛔ invalid username or password';
@@ -187,9 +187,6 @@
 
     // ---------- event listeners ----------
     searchForm.addEventListener('submit', handleSearch);
-
-    // Optional: search on Enter key (already handled by form submit)
-    // Optional: live search? We'll keep it simple with button click
 
     // ---------- initialize ----------
     loadInitialData();
