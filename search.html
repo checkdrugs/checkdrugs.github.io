@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Search · Sync Master</title>
+    <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+    <div class="search-container">
+        <!-- Header -->
+        <div class="search-header">
+            <h1>🔍 Search Online Master</h1>
+            <a href="index.html" class="logout-btn">← Logout</a>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="search-bar-wrapper">
+            <form id="searchForm">
+                <input 
+                    type="text" 
+                    id="searchInput" 
+                    placeholder="Search by drug name, ID, active ingredients..."
+                    autofocus
+                />
+                <button type="submit">Search</button>
+            </form>
+            <div class="search-stats" id="searchStats"></div>
+        </div>
+
+        <!-- Results -->
+        <div id="resultsContainer">
+            <!-- Results will be dynamically inserted here -->
+        </div>
+    </div>
+
+    <script src="js/script.js"></script>
+</body>
+</html>
