@@ -10,13 +10,41 @@
     <h1>Search Online Master</h1>
     <a href="index.html">← Logout</a>
 
-    <form id="searchForm">
+    <form id="searchForm" style="display:inline;">
         <input type="text" id="searchInput" placeholder="Search..." />
         <button type="submit">Search</button>
     </form>
+    <button id="showAllBtn">Show All</button>
 
     <div id="searchStats"></div>
-    <div id="resultsContainer"></div>
+
+    <!-- Table with headers -->
+    <div id="resultsContainer">
+        <table border="1" cellpadding="5" cellspacing="0" style="width:100%;border-collapse:collapse;font-family:monospace;font-size:13px;">
+            <thead>
+                <tr style="background:#f0f0f0;font-weight:bold;">
+                    <th>ID</th>
+                    <th>Drug Class</th>
+                    <th>Drug</th>
+                    <th>Active Ingredients</th>
+                    <th>Presentation</th>
+                    <th>Form</th>
+                    <th>Treats</th>
+                    <th>Balance</th>
+                </tr>
+            </thead>
+            <tbody id="resultsBody">
+                <tr><td colspan="8" style="text-align:center;">Loading...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    <div id="pagination" style="margin-top:10px;">
+        <button id="prevBtn">← Previous</button>
+        <span id="pageInfo">Page 1 of 1</span>
+        <button id="nextBtn">Next →</button>
+    </div>
 
     <script>
         (function() {
@@ -24,11 +52,19 @@
 
             const searchForm = document.getElementById('searchForm');
             const searchInput = document.getElementById('searchInput');
-            const resultsContainer = document.getElementById('resultsContainer');
+            const resultsBody = document.getElementById('resultsBody');
             const searchStats = document.getElementById('searchStats');
+            const showAllBtn = document.getElementById('showAllBtn');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const pageInfo = document.getElementById('pageInfo');
 
             let allData = [];
+            let currentPage = 1;
+            const ITEMS_PER_PAGE = 15;
+            let currentResults = [];
 
+            // ---------- Fetch data ----------
             async function fetchAllData() {
                 try {
                     const response = await fetch(API_URL);
@@ -54,6 +90,7 @@
                 }
             }
 
+            // ---------- Search/filter data ----------
             function searchData(query) {
                 if (!allData || !allData.length) return [];
                 if (!query || query.trim() === '') return allData;
@@ -90,15 +127,35 @@
                 });
             }
 
-            function renderResults(results, query) {
-                if (!results || results.length === 0) {
-                    resultsContainer.innerHTML = `No results found for "${query || ''}"`;
-                    searchStats.textContent = '0 results';
+            // ---------- Render table with pagination ----------
+            function renderTable(results, page = 1) {
+                currentResults = results;
+                const totalPages = Math.ceil(results.length / ITEMS_PER_PAGE) || 1;
+                
+                if (page > totalPages) page = totalPages;
+                if (page < 1) page = 1;
+                currentPage = page;
+
+                const start = (page - 1) * ITEMS_PER_PAGE;
+                const end = Math.min(start + ITEMS_PER_PAGE, results.length);
+                const pageItems = results.slice(start, end);
+
+                // Update stats
+                searchStats.textContent = `Showing ${start + 1}-${end} of ${results.length} records (${allData.length} total)`;
+
+                // Update pagination info
+                pageInfo.textContent = `Page ${page} of ${totalPages}`;
+                prevBtn.disabled = page <= 1;
+                nextBtn.disabled = page >= totalPages;
+
+                // Build table rows
+                if (pageItems.length === 0) {
+                    resultsBody.innerHTML = `<tr><td colspan="8" style="text-align:center;">No results found</td></tr>`;
                     return;
                 }
 
                 let html = '';
-                results.forEach(row => {
+                pageItems.forEach(row => {
                     let id, drugClass, drug, ingredients, presentation, form, treats, balance;
                     
                     if (Array.isArray(row)) {
@@ -123,58 +180,98 @@
                         return;
                     }
 
-                    html += `<div style="border:1px solid #ccc;padding:10px;margin:5px 0;">`;
-                    html += `<strong>${drug || 'Unnamed Drug'}</strong><br>`;
-                    if (ingredients) html += `Ingredients: ${ingredients}<br>`;
-                    if (form) html += `Form: ${form}<br>`;
-                    if (presentation) html += `Presentation: ${presentation}<br>`;
-                    if (drugClass) html += `Class: ${drugClass}<br>`;
-                    if (treats) html += `Treats: ${treats}<br>`;
-                    html += `Balance: ${balance}<br>`;
-                    if (id) html += `ID: ${id}<br>`;
-                    html += `</div>`;
+                    html += `<tr>`;
+                    html += `<td>${id}</td>`;
+                    html += `<td>${drugClass}</td>`;
+                    html += `<td><strong>${drug}</strong></td>`;
+                    html += `<td>${ingredients}</td>`;
+                    html += `<td>${presentation}</td>`;
+                    html += `<td>${form}</td>`;
+                    html += `<td>${treats}</td>`;
+                    html += `<td style="text-align:right;font-weight:bold;">${balance}</td>`;
+                    html += `</tr>`;
                 });
 
-                resultsContainer.innerHTML = html;
-                searchStats.textContent = `${results.length} results (${allData.length} total)`;
+                resultsBody.innerHTML = html;
             }
 
+            // ---------- Handle search ----------
             async function handleSearch(e) {
                 e.preventDefault();
                 const query = searchInput.value;
                 
                 if (allData.length > 0) {
                     const results = searchData(query);
-                    renderResults(results, query);
+                    renderTable(results, 1);
                     return;
                 }
 
-                resultsContainer.innerHTML = 'Loading...';
+                resultsBody.innerHTML = `<tr><td colspan="8" style="text-align:center;">Loading...</td></tr>`;
                 const data = await fetchAllData();
 
                 if (!data || data.length === 0) {
-                    resultsContainer.innerHTML = 'No data available';
+                    resultsBody.innerHTML = `<tr><td colspan="8" style="text-align:center;">No data available</td></tr>`;
                     searchStats.textContent = '0 results';
                     return;
                 }
 
                 const results = searchData(query);
-                renderResults(results, query);
+                renderTable(results, 1);
             }
 
-            async function loadInitialData() {
-                resultsContainer.innerHTML = 'Loading...';
-                const data = await fetchAllData();
-                
-                if (!data || data.length === 0) {
-                    resultsContainer.innerHTML = 'No data available';
+            // ---------- Show all ----------
+            async function showAll() {
+                searchInput.value = '';
+                if (allData.length > 0) {
+                    renderTable(allData, 1);
                     return;
                 }
 
-                renderResults(data, '');
+                resultsBody.innerHTML = `<tr><td colspan="8" style="text-align:center;">Loading...</td></tr>`;
+                const data = await fetchAllData();
+                
+                if (!data || data.length === 0) {
+                    resultsBody.innerHTML = `<tr><td colspan="8" style="text-align:center;">No data available</td></tr>`;
+                    return;
+                }
+
+                renderTable(data, 1);
             }
 
+            // ---------- Pagination navigation ----------
+            function prevPage() {
+                if (currentPage > 1) {
+                    renderTable(currentResults, currentPage - 1);
+                }
+            }
+
+            function nextPage() {
+                const totalPages = Math.ceil(currentResults.length / ITEMS_PER_PAGE);
+                if (currentPage < totalPages) {
+                    renderTable(currentResults, currentPage + 1);
+                }
+            }
+
+            // ---------- Load initial data ----------
+            async function loadInitialData() {
+                resultsBody.innerHTML = `<tr><td colspan="8" style="text-align:center;">Loading...</td></tr>`;
+                const data = await fetchAllData();
+                
+                if (!data || data.length === 0) {
+                    resultsBody.innerHTML = `<tr><td colspan="8" style="text-align:center;">No data available</td></tr>`;
+                    return;
+                }
+
+                renderTable(data, 1);
+            }
+
+            // ---------- Event listeners ----------
             searchForm.addEventListener('submit', handleSearch);
+            showAllBtn.addEventListener('click', showAll);
+            prevBtn.addEventListener('click', prevPage);
+            nextBtn.addEventListener('click', nextPage);
+
+            // ---------- Initialize ----------
             loadInitialData();
 
         })();
