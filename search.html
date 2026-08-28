@@ -3,127 +3,67 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Search · Sync Master</title>
-    <link rel="stylesheet" href="style.css" />
+    <title>Search</title>
 </head>
-<body class="search-page">
+<body>
 
-    <div class="search-container">
-        <div class="search-header">
-            <h1>🔍 Search Online Master</h1>
-            <a href="index.html" class="logout-btn">← Logout</a>
-        </div>
+    <h1>Search Online Master</h1>
+    <a href="index.html">← Logout</a>
 
-        <div class="search-bar-wrapper">
-            <form id="searchForm">
-                <input 
-                    type="text" 
-                    id="searchInput" 
-                    placeholder="Search by drug name, ID, active ingredients..."
-                    autofocus
-                />
-                <button type="submit">Search</button>
-            </form>
-            <div class="search-stats" id="searchStats"></div>
-        </div>
+    <form id="searchForm">
+        <input type="text" id="searchInput" placeholder="Search..." />
+        <button type="submit">Search</button>
+    </form>
 
-        <div id="resultsContainer">
-            <!-- Results will be dynamically inserted here -->
-        </div>
-    </div>
+    <div id="searchStats"></div>
+    <div id="resultsContainer"></div>
 
     <script>
         (function() {
-            console.log('search.js loaded successfully');
-
-            // ---------- configuration ----------
-            // Replace with your actual Apps Script web app URL
             const API_URL = 'https://script.google.com/macros/s/AKfycbzzKAmnfCe9O7I56Tb8Fnye-2-GMvpGkyYR574E7uULX2wao9lK77Z9jn6WOiPCZzru/exec';
 
-            // DOM refs
             const searchForm = document.getElementById('searchForm');
             const searchInput = document.getElementById('searchInput');
             const resultsContainer = document.getElementById('resultsContainer');
             const searchStats = document.getElementById('searchStats');
 
-            // Store all data
             let allData = [];
 
-            // ---------- fetch all data from Google Sheet ----------
             async function fetchAllData() {
                 try {
-                    console.log('Fetching data from:', API_URL);
-                    
-                    const response = await fetch(API_URL, {
-                        method: 'GET',
-                        headers: {
-                            'Accept': 'application/json'
-                        }
-                    });
-
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-
-                    // Get the response as JSON
+                    const response = await fetch(API_URL);
                     const data = await response.json();
-                    console.log('Data received:', data);
-                    console.log('Data type:', typeof data);
-                    console.log('Is array?', Array.isArray(data));
-                    console.log('Data length:', data ? data.length : 'null/undefined');
                     
-                    // Check if data is an array
                     if (Array.isArray(data)) {
                         allData = data;
                         return data;
                     } else if (data && typeof data === 'object') {
-                        // If it's an object with data inside
-                        console.log('Data is an object, checking for data property');
-                        if (data.data && Array.isArray(data.data)) {
-                            allData = data.data;
-                            return data.data;
-                        } else if (data.records && Array.isArray(data.records)) {
-                            allData = data.records;
-                            return data.records;
-                        } else if (data.result && Array.isArray(data.result)) {
-                            allData = data.result;
-                            return data.result;
-                        } else {
-                            // Try to extract any array from the object
-                            const values = Object.values(data);
-                            for (let val of values) {
-                                if (Array.isArray(val)) {
-                                    allData = val;
-                                    return val;
-                                }
+                        const values = Object.values(data);
+                        for (let val of values) {
+                            if (Array.isArray(val)) {
+                                allData = val;
+                                return val;
                             }
-                            console.warn('Could not find array in object:', data);
-                            return null;
                         }
-                    } else {
-                        console.error('Unexpected data format:', data);
                         return null;
                     }
+                    return null;
                 } catch (error) {
                     console.error('Fetch error:', error);
                     return null;
                 }
             }
 
-            // ---------- search/filter data ----------
             function searchData(query) {
                 if (!allData || !allData.length) return [];
                 if (!query || query.trim() === '') return allData;
 
                 const lowerQuery = query.toLowerCase().trim();
-                console.log('Searching for:', lowerQuery);
                 
-                const results = allData.filter(row => {
-                    // Handle different data structures
+                return allData.filter(row => {
                     let id, drugClass, drug, ingredients, form, treats;
                     
                     if (Array.isArray(row)) {
-                        // Row is an array: [ID, Drug Class, Drug, Active Ingredients, Presentation Size, Form, What It Treats, Balance]
                         id = (row[0] || '').toString().toLowerCase();
                         drugClass = (row[1] || '').toString().toLowerCase();
                         drug = (row[2] || '').toString().toLowerCase();
@@ -131,11 +71,10 @@
                         form = (row[5] || '').toString().toLowerCase();
                         treats = (row[6] || '').toString().toLowerCase();
                     } else if (typeof row === 'object') {
-                        // Row is an object with property names
                         id = (row.ID || row.id || row[0] || '').toString().toLowerCase();
-                        drugClass = (row['Drug Class'] || row.drugClass || row['Drug Class / Category'] || row[1] || '').toString().toLowerCase();
+                        drugClass = (row['Drug Class'] || row.drugClass || row[1] || '').toString().toLowerCase();
                         drug = (row.Drug || row.drug || row[2] || '').toString().toLowerCase();
-                        ingredients = (row['Active Ingredients'] || row.ingredients || row['Active Ingredients (with strength)'] || row[3] || '').toString().toLowerCase();
+                        ingredients = (row['Active Ingredients'] || row.ingredients || row[3] || '').toString().toLowerCase();
                         form = (row.Form || row.form || row[5] || '').toString().toLowerCase();
                         treats = (row['What It Treats'] || row.treats || row[6] || '').toString().toLowerCase();
                     } else {
@@ -149,24 +88,12 @@
                            form.includes(lowerQuery) ||
                            treats.includes(lowerQuery);
                 });
-                
-                console.log('Search results:', results.length);
-                return results;
             }
 
-            // ---------- render results ----------
             function renderResults(results, query) {
-                console.log('Rendering results:', results);
-                
                 if (!results || results.length === 0) {
-                    resultsContainer.innerHTML = `
-                        <div class="no-results">
-                            <p>😕 No results found for "<strong>${query || ''}</strong>"</p>
-                            <p style="margin-top: 0.5rem; font-size: 0.9rem; color: #7a8a9a;">Try a different search term</p>
-                            ${allData.length > 0 ? `<p style="margin-top: 0.5rem; font-size: 0.8rem; color: #7a8a9a;">Total records: ${allData.length}</p>` : ''}
-                        </div>
-                    `;
-                    searchStats.textContent = `${results.length} results found`;
+                    resultsContainer.innerHTML = `No results found for "${query || ''}"`;
+                    searchStats.textContent = '0 results';
                     return;
                 }
 
@@ -175,7 +102,6 @@
                     let id, drugClass, drug, ingredients, presentation, form, treats, balance;
                     
                     if (Array.isArray(row)) {
-                        // Row is an array
                         id = row[0] || '';
                         drugClass = row[1] || '';
                         drug = row[2] || '';
@@ -185,11 +111,10 @@
                         treats = row[6] || '';
                         balance = row[7] || 0;
                     } else if (typeof row === 'object') {
-                        // Row is an object
                         id = row.ID || row.id || row[0] || '';
-                        drugClass = row['Drug Class'] || row.drugClass || row['Drug Class / Category'] || row[1] || '';
+                        drugClass = row['Drug Class'] || row.drugClass || row[1] || '';
                         drug = row.Drug || row.drug || row[2] || '';
-                        ingredients = row['Active Ingredients'] || row.ingredients || row['Active Ingredients (with strength)'] || row[3] || '';
+                        ingredients = row['Active Ingredients'] || row.ingredients || row[3] || '';
                         presentation = row['Presentation Size'] || row.presentation || row[4] || '';
                         form = row.Form || row.form || row[5] || '';
                         treats = row['What It Treats'] || row.treats || row[6] || '';
@@ -198,95 +123,58 @@
                         return;
                     }
 
-                    // Build the result item
-                    html += `
-                        <div class="result-item">
-                            <div class="drug-name">${drug || 'Unnamed Drug'}</div>
-                            ${ingredients ? `<div class="drug-detail"><strong>Ingredients:</strong> ${ingredients}</div>` : ''}
-                            ${form ? `<div class="drug-detail"><strong>Form:</strong> ${form}</div>` : ''}
-                            ${presentation ? `<div class="drug-detail"><strong>Presentation:</strong> ${presentation}</div>` : ''}
-                            ${drugClass ? `<div class="drug-detail"><strong>Class:</strong> ${drugClass}</div>` : ''}
-                            ${treats ? `<div class="drug-detail"><strong>Treats:</strong> ${treats}</div>` : ''}
-                            <div class="balance">💰 Balance: ${balance}</div>
-                            ${id ? `<div style="font-size: 0.75rem; color: #7a8a9a; margin-top: 0.3rem;">ID: ${id}</div>` : ''}
-                        </div>
-                    `;
+                    html += `<div style="border:1px solid #ccc;padding:10px;margin:5px 0;">`;
+                    html += `<strong>${drug || 'Unnamed Drug'}</strong><br>`;
+                    if (ingredients) html += `Ingredients: ${ingredients}<br>`;
+                    if (form) html += `Form: ${form}<br>`;
+                    if (presentation) html += `Presentation: ${presentation}<br>`;
+                    if (drugClass) html += `Class: ${drugClass}<br>`;
+                    if (treats) html += `Treats: ${treats}<br>`;
+                    html += `Balance: ${balance}<br>`;
+                    if (id) html += `ID: ${id}<br>`;
+                    html += `</div>`;
                 });
 
                 resultsContainer.innerHTML = html;
-                searchStats.textContent = `${results.length} result${results.length > 1 ? 's' : ''} found (${allData.length} total records)`;
+                searchStats.textContent = `${results.length} results (${allData.length} total)`;
             }
 
-            // ---------- handle search ----------
             async function handleSearch(e) {
                 e.preventDefault();
-
                 const query = searchInput.value;
-                console.log('Search query:', query);
                 
-                // Show loading state
-                resultsContainer.innerHTML = '<div class="loading">⏳ Searching...</div>';
-                searchStats.textContent = '';
-
-                // If data is already loaded, search locally
                 if (allData.length > 0) {
                     const results = searchData(query);
                     renderResults(results, query);
                     return;
                 }
 
-                // Otherwise fetch data first
+                resultsContainer.innerHTML = 'Loading...';
                 const data = await fetchAllData();
 
                 if (!data || data.length === 0) {
-                    resultsContainer.innerHTML = `
-                        <div class="no-results">
-                            <p>⚠️ No data available</p>
-                            <p style="margin-top: 0.5rem; font-size: 0.9rem; color: #7a8a9a;">The Online Master sheet might be empty</p>
-                        </div>
-                    `;
-                    searchStats.textContent = '0 results found';
+                    resultsContainer.innerHTML = 'No data available';
+                    searchStats.textContent = '0 results';
                     return;
                 }
 
-                // Search and render
                 const results = searchData(query);
                 renderResults(results, query);
             }
 
-            // ---------- load all data on page load ----------
             async function loadInitialData() {
-                console.log('Loading initial data...');
-                resultsContainer.innerHTML = '<div class="loading">⏳ Loading data...</div>';
-                
+                resultsContainer.innerHTML = 'Loading...';
                 const data = await fetchAllData();
                 
                 if (!data || data.length === 0) {
-                    console.error('Could not load data');
-                    resultsContainer.innerHTML = `
-                        <div class="no-results">
-                            <p>⚠️ No data available</p>
-                            <p style="margin-top: 0.5rem; font-size: 0.9rem; color: #7a8a9a;">The Online Master sheet might be empty</p>
-                            <p style="margin-top: 0.5rem; font-size: 0.8rem; color: #7a8a9a;">URL: ${API_URL}</p>
-                        </div>
-                    `;
+                    resultsContainer.innerHTML = 'No data available';
                     return;
                 }
 
-                console.log('Initial data loaded:', data.length, 'rows');
                 renderResults(data, '');
-                searchInput.placeholder = 'Search by drug name, ID, active ingredients...';
             }
 
-            // ---------- event listeners ----------
-            if (searchForm) {
-                searchForm.addEventListener('submit', handleSearch);
-                console.log('Search form event listener attached');
-            } else {
-                console.error('Search form not found!');
-            }
-
-            // ---------- initialize ----------
+            searchForm.addEventListener('submit', handleSearch);
             loadInitialData();
 
         })();
