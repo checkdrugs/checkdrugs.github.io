@@ -1,0 +1,101 @@
+/* minimal, no-fancy – just center everything */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+body {
+    background: #f2f4f6;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+.login-card {
+    background: white;
+    padding: 2.5rem 2.8rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.03);
+    text-align: center;
+    width: 100%;
+    max-width: 420px;
+    border: 1px solid #dce1e6;
+}
+h1 {
+    font-weight: 450;
+    font-size: 1.9rem;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.25rem;
+    color: #1e2b37;
+}
+.subhead {
+    color: #4f5b66;
+    margin-bottom: 2rem;
+    font-size: 0.95rem;
+    border-bottom: 1px solid #e9edf2;
+    padding-bottom: 1rem;
+}
+.field {
+    margin-bottom: 1.25rem;
+    text-align: left;
+}
+.field label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #2d3a47;
+    margin-bottom: 0.3rem;
+}
+.field input {
+    width: 100%;
+    padding: 0.7rem 0.9rem;
+    font-size: 1rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 0.5rem;
+    background: white;
+    transition: 0.15s;
+}
+.field input:focus {
+    outline: none;
+    border-color: #4b7b9e;
+    box-shadow: 0 0 0 3px rgba(55, 100, 140, 0.15);
+}
+button {
+    width: 100%;
+    background: #1e2b37;
+    color: white;
+    border: none;
+    padding: 0.8rem 1.2rem;
+    font-size: 1rem;
+    font-weight: 500;
+    border-radius: 2rem;
+    cursor: pointer;
+    transition: 0.2s;
+    letter-spacing: 0.3px;
+    margin-top: 0.25rem;
+}
+button:hover {
+    background: #14212b;
+}
+.error-msg {
+    color: #b53b3b;
+    font-size: 0.9rem;
+    margin-top: 1rem;
+    min-height: 1.5rem;
+}
+.footnote {
+    margin-top: 1.6rem;
+    color: #5e6e7e;
+    font-size: 0.75rem;
+    border-top: 1px solid #e9edf2;
+    padding-top: 1.2rem;
+    letter-spacing: 0.2px;
+}
+.footnote span {
+    background: #eef2f6;
+    padding: 0.1rem 0.7rem;
+    border-radius: 1rem;
+    font-family: monospace;
+    font-size: 0.8rem;
+}
