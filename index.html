@@ -31,6 +31,30 @@
     </div>
 </div>
 
-<script src="js/login.js"></script>
+<!-- Try loading with full path or inline for debugging -->
+<script src="login.js"></script>
+
+<!-- Fallback: if login.js fails to load, this inline script will work -->
+<script>
+    // Backup inline login in case external file fails
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('loginForm');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const user = document.getElementById('username').value.trim();
+                const pass = document.getElementById('password').value.trim();
+                const errorEl = document.getElementById('loginError');
+                
+                if (user === 'admin' && pass === 'solo') {
+                    window.location.href = 'search.html';
+                } else {
+                    errorEl.textContent = '⛔ invalid username or password';
+                }
+            });
+        }
+    });
+</script>
+
 </body>
 </html>
