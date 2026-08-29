@@ -3,52 +3,418 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Login</title>
+    <title>Login · Sync Master</title>
 </head>
 <body>
 
-    <h1>Sync Master</h1>
-    <p>Local → Online Master</p>
+    <!-- ===== LOGIN FORM ===== -->
+    <div id="loginView">
+        <h1>⏺ Sync Master</h1>
+        <p>Login to continue</p>
 
-    <form id="loginForm">
-        <div>
-            <label for="username">Username</label>
-            <input type="text" id="username" value="admin" />
-        </div>
-        <div>
-            <label for="password">Password</label>
-            <input type="password" id="password" value="solo" />
-        </div>
-        <button type="submit">Login</button>
-        <div id="loginError"></div>
-    </form>
+        <form id="loginForm">
+            <div>
+                <label for="loginUsername">Username</label>
+                <input type="text" id="loginUsername" placeholder="Enter username" />
+            </div>
+            <div>
+                <label for="loginPassword">Password</label>
+                <input type="password" id="loginPassword" placeholder="Enter password" />
+            </div>
+            <div id="loginError" style="color:red;"></div>
+            <button type="submit">Login</button>
+            <button type="button" id="showSignupBtn">Create Account</button>
+        </form>
+    </div>
+
+    <!-- ===== SIGNUP FORM ===== -->
+    <div id="signupView" style="display:none;">
+        <h1>⏺ Create Account</h1>
+        <p>Fill in your details to sign up</p>
+
+        <form id="signupForm">
+            <div>
+                <label for="surname">Surname</label>
+                <input type="text" id="surname" required />
+            </div>
+            <div>
+                <label for="firstName">First Name</label>
+                <input type="text" id="firstName" required />
+            </div>
+            <div>
+                <label for="otherNames">Other Names (comma separated)</label>
+                <input type="text" id="otherNames" placeholder="e.g., John, Mark, Peter" />
+            </div>
+            <div>
+                <label for="signupUsername">Username</label>
+                <input type="text" id="signupUsername" required />
+                <span id="usernameStatus"></span>
+            </div>
+            <div>
+                <label for="email">Email</label>
+                <input type="email" id="email" required />
+                <span id="emailStatus"></span>
+            </div>
+            <div>
+                <label for="phone">Phone Number</label>
+                <input type="tel" id="phone" placeholder="+1234567890" required />
+                <span id="phoneStatus"></span>
+            </div>
+            <div>
+                <label for="altPhone">Alternative Phone Number (optional)</label>
+                <button type="button" id="addAltPhoneBtn">+ Add Alternative Phone</button>
+                <div id="altPhoneContainer"></div>
+            </div>
+            <div>
+                <label for="password">Password</label>
+                <input type="password" id="password" required />
+            </div>
+            <div>
+                <label for="confirmPassword">Confirm Password</label>
+                <input type="password" id="confirmPassword" required />
+                <span id="passwordMatchStatus"></span>
+            </div>
+            <div id="signupError" style="color:red;"></div>
+            <div>
+                <button type="submit" id="signupSubmitBtn">Sign Up</button>
+                <button type="button" id="cancelSignupBtn">Cancel</button>
+            </div>
+        </form>
+    </div>
 
     <script>
         (function() {
-            const DEFAULT_USER = 'admin';
-            const DEFAULT_PASS = 'solo';
+            // ===== CONFIGURATION =====
+            const SCRIPT_URL = 'YOUR_APPS_SCRIPT_WEB_APP_URL'; // Replace with your deployed URL
 
-            const form = document.getElementById('loginForm');
-            const usernameInput = document.getElementById('username');
-            const passwordInput = document.getElementById('password');
-            const errorEl = document.getElementById('loginError');
+            // ===== DOM REFS =====
+            const loginView = document.getElementById('loginView');
+            const signupView = document.getElementById('signupView');
+            const loginForm = document.getElementById('loginForm');
+            const signupForm = document.getElementById('signupForm');
+            const showSignupBtn = document.getElementById('showSignupBtn');
+            const cancelSignupBtn = document.getElementById('cancelSignupBtn');
+            const addAltPhoneBtn = document.getElementById('addAltPhoneBtn');
+            const altPhoneContainer = document.getElementById('altPhoneContainer');
 
-            function handleLogin(e) {
-                e.preventDefault();
+            const loginUsername = document.getElementById('loginUsername');
+            const loginPassword = document.getElementById('loginPassword');
+            const loginError = document.getElementById('loginError');
 
-                const user = usernameInput.value.trim();
-                const pass = passwordInput.value.trim();
+            const surname = document.getElementById('surname');
+            const firstName = document.getElementById('firstName');
+            const otherNames = document.getElementById('otherNames');
+            const signupUsername = document.getElementById('signupUsername');
+            const email = document.getElementById('email');
+            const phone = document.getElementById('phone');
+            const password = document.getElementById('password');
+            const confirmPassword = document.getElementById('confirmPassword');
+            const signupError = document.getElementById('signupError');
 
-                errorEl.textContent = '';
+            const usernameStatus = document.getElementById('usernameStatus');
+            const emailStatus = document.getElementById('emailStatus');
+            const phoneStatus = document.getElementById('phoneStatus');
+            const passwordMatchStatus = document.getElementById('passwordMatchStatus');
+            const signupSubmitBtn = document.getElementById('signupSubmitBtn');
 
-                if (user === DEFAULT_USER && pass === DEFAULT_PASS) {
-                    window.location.href = 'search.html';
-                } else {
-                    errorEl.textContent = 'Invalid username or password';
+            let altPhoneCount = 0;
+            let allUsers = [];
+
+            // ===== FETCH USERS =====
+            async function fetchUsers() {
+                try {
+                    const response = await fetch(SCRIPT_URL + '?action=getUsers');
+                    const data = await response.json();
+                    allUsers = data || [];
+                    return allUsers;
+                } catch (error) {
+                    console.error('Error fetching users:', error);
+                    return [];
                 }
             }
 
-            form.addEventListener('submit', handleLogin);
+            // ===== CHECK AVAILABILITY =====
+            function isUsernameTaken(username) {
+                return allUsers.some(u => u.username && u.username.toLowerCase() === username.toLowerCase());
+            }
+
+            function isEmailTaken(emailAddr) {
+                return allUsers.some(u => u.email && u.email.toLowerCase() === emailAddr.toLowerCase());
+            }
+
+            function isPhoneTaken(phoneNum) {
+                return allUsers.some(u => u.phone && u.phone === phoneNum);
+            }
+
+            // ===== GENERATE USER ID =====
+            function generateUserId() {
+                const randomNum = String(Math.floor(Math.random() * 100000000)).padStart(8, '0');
+                return 'JB' + randomNum + 'K';
+            }
+
+            // ===== VALIDATION =====
+            function validateSignup() {
+                // Check required fields
+                if (!surname.value.trim()) { signupError.textContent = 'Surname is required'; return false; }
+                if (!firstName.value.trim()) { signupError.textContent = 'First Name is required'; return false; }
+                if (!signupUsername.value.trim()) { signupError.textContent = 'Username is required'; return false; }
+                if (!email.value.trim()) { signupError.textContent = 'Email is required'; return false; }
+                if (!phone.value.trim()) { signupError.textContent = 'Phone number is required'; return false; }
+                if (!password.value) { signupError.textContent = 'Password is required'; return false; }
+                if (password.value !== confirmPassword.value) { signupError.textContent = 'Passwords do not match'; return false; }
+
+                // Check availability
+                if (isUsernameTaken(signupUsername.value.trim())) {
+                    signupError.textContent = 'Username is already taken';
+                    return false;
+                }
+                if (isEmailTaken(email.value.trim())) {
+                    signupError.textContent = 'Email is already registered';
+                    return false;
+                }
+                if (isPhoneTaken(phone.value.trim())) {
+                    signupError.textContent = 'Phone number is already registered';
+                    return false;
+                }
+
+                // Check alternative phones
+                const altPhones = document.querySelectorAll('.alt-phone-input');
+                for (let input of altPhones) {
+                    if (input.value.trim() && isPhoneTaken(input.value.trim())) {
+                        signupError.textContent = 'Alternative phone number is already registered';
+                        return false;
+                    }
+                }
+
+                signupError.textContent = '';
+                return true;
+            }
+
+            // ===== SIGNUP SUBMIT =====
+            async function handleSignup(e) {
+                e.preventDefault();
+
+                if (!validateSignup()) return;
+
+                // Get alternative phones
+                const altPhones = [];
+                document.querySelectorAll('.alt-phone-input').forEach(input => {
+                    if (input.value.trim()) {
+                        altPhones.push(input.value.trim());
+                    }
+                });
+
+                const userData = {
+                    userId: generateUserId(),
+                    surname: surname.value.trim(),
+                    firstName: firstName.value.trim(),
+                    otherNames: otherNames.value.trim(),
+                    username: signupUsername.value.trim(),
+                    email: email.value.trim(),
+                    phone: phone.value.trim(),
+                    altPhones: altPhones.join(','),
+                    password: password.value,
+                    createdAt: new Date().toISOString()
+                };
+
+                // Button loading animation
+                signupSubmitBtn.textContent = 'Creating Account...';
+                signupSubmitBtn.style.transition = 'background-color 0.5s ease, color 0.5s ease';
+                signupSubmitBtn.style.backgroundColor = '#4CAF50';
+                signupSubmitBtn.style.color = 'white';
+
+                try {
+                    const response = await fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'signup', data: userData })
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        // Success - green flash
+                        signupSubmitBtn.style.backgroundColor = '#4CAF50';
+                        signupSubmitBtn.textContent = '✓ Account Created!';
+                        setTimeout(() => {
+                            // Reset and go to login
+                            signupView.style.display = 'none';
+                            loginView.style.display = 'block';
+                            signupForm.reset();
+                            signupSubmitBtn.textContent = 'Sign Up';
+                            signupSubmitBtn.style.backgroundColor = '';
+                            signupSubmitBtn.style.color = '';
+                            loginError.textContent = 'Account created! Please login.';
+                            loginError.style.color = 'green';
+                            fetchUsers(); // Refresh user cache
+                        }, 1500);
+                    } else {
+                        signupError.textContent = result.error || 'Signup failed';
+                        signupSubmitBtn.textContent = 'Sign Up';
+                        signupSubmitBtn.style.backgroundColor = '';
+                        signupSubmitBtn.style.color = '';
+                    }
+                } catch (error) {
+                    signupError.textContent = 'Network error: ' + error.message;
+                    signupSubmitBtn.textContent = 'Sign Up';
+                    signupSubmitBtn.style.backgroundColor = '';
+                    signupSubmitBtn.style.color = '';
+                }
+            }
+
+            // ===== LOGIN =====
+            async function handleLogin(e) {
+                e.preventDefault();
+
+                const username = loginUsername.value.trim();
+                const password = loginPassword.value.trim();
+
+                if (!username || !password) {
+                    loginError.textContent = 'Please enter username and password';
+                    return;
+                }
+
+                // Fetch users if not loaded
+                if (allUsers.length === 0) {
+                    await fetchUsers();
+                }
+
+                const user = allUsers.find(u =>
+                    u.username && u.username.toLowerCase() === username.toLowerCase() &&
+                    u.password === password
+                );
+
+                if (user) {
+                    loginError.textContent = '';
+                    loginError.style.color = '';
+                    // Store session
+                    sessionStorage.setItem('loggedInUser', JSON.stringify(user));
+                    // Redirect to search
+                    window.location.href = 'search.html';
+                } else {
+                    loginError.textContent = 'Invalid username or password';
+                    loginError.style.color = 'red';
+                }
+            }
+
+            // ===== REAL-TIME VALIDATION =====
+            signupUsername.addEventListener('blur', function() {
+                if (this.value.trim() && isUsernameTaken(this.value.trim())) {
+                    usernameStatus.textContent = '❌ Username taken';
+                    usernameStatus.style.color = 'red';
+                } else if (this.value.trim()) {
+                    usernameStatus.textContent = '✅ Username available';
+                    usernameStatus.style.color = 'green';
+                } else {
+                    usernameStatus.textContent = '';
+                }
+            });
+
+            email.addEventListener('blur', function() {
+                if (this.value.trim() && isEmailTaken(this.value.trim())) {
+                    emailStatus.textContent = '❌ Email already registered';
+                    emailStatus.style.color = 'red';
+                } else if (this.value.trim()) {
+                    emailStatus.textContent = '✅ Email available';
+                    emailStatus.style.color = 'green';
+                } else {
+                    emailStatus.textContent = '';
+                }
+            });
+
+            phone.addEventListener('blur', function() {
+                if (this.value.trim() && isPhoneTaken(this.value.trim())) {
+                    phoneStatus.textContent = '❌ Phone already registered';
+                    phoneStatus.style.color = 'red';
+                } else if (this.value.trim()) {
+                    phoneStatus.textContent = '✅ Phone available';
+                    phoneStatus.style.color = 'green';
+                } else {
+                    phoneStatus.textContent = '';
+                }
+            });
+
+            confirmPassword.addEventListener('input', function() {
+                if (this.value && this.value === password.value) {
+                    passwordMatchStatus.textContent = '✅ Passwords match';
+                    passwordMatchStatus.style.color = 'green';
+                } else if (this.value) {
+                    passwordMatchStatus.textContent = '❌ Passwords do not match';
+                    passwordMatchStatus.style.color = 'red';
+                } else {
+                    passwordMatchStatus.textContent = '';
+                }
+            });
+
+            // ===== ADD ALTERNATIVE PHONE =====
+            addAltPhoneBtn.addEventListener('click', function() {
+                altPhoneCount++;
+                const div = document.createElement('div');
+                div.style.marginTop = '5px';
+                div.innerHTML = `
+                    <label>Alternative Phone ${altPhoneCount}</label>
+                    <input type="tel" class="alt-phone-input" placeholder="+1234567890" />
+                    <button type="button" class="remove-alt-phone" style="margin-left:5px;">✕</button>
+                `;
+                altPhoneContainer.appendChild(div);
+
+                // Remove button
+                div.querySelector('.remove-alt-phone').addEventListener('click', function() {
+                    altPhoneContainer.removeChild(div);
+                    altPhoneCount--;
+                });
+
+                // Check availability on blur
+                div.querySelector('.alt-phone-input').addEventListener('blur', function() {
+                    const statusSpan = this.parentElement.querySelector('.alt-phone-status') || document.createElement('span');
+                    if (!this.parentElement.querySelector('.alt-phone-status')) {
+                        statusSpan.className = 'alt-phone-status';
+                        statusSpan.style.marginLeft = '5px';
+                        this.parentElement.appendChild(statusSpan);
+                    }
+                    if (this.value.trim() && isPhoneTaken(this.value.trim())) {
+                        statusSpan.textContent = '❌ Taken';
+                        statusSpan.style.color = 'red';
+                    } else if (this.value.trim()) {
+                        statusSpan.textContent = '✅ Available';
+                        statusSpan.style.color = 'green';
+                    } else {
+                        statusSpan.textContent = '';
+                    }
+                });
+            });
+
+            // ===== SWITCH VIEWS =====
+            showSignupBtn.addEventListener('click', function() {
+                loginView.style.display = 'none';
+                signupView.style.display = 'block';
+                loginError.textContent = '';
+            });
+
+            cancelSignupBtn.addEventListener('click', function() {
+                signupView.style.display = 'none';
+                loginView.style.display = 'block';
+                signupForm.reset();
+                signupError.textContent = '';
+                usernameStatus.textContent = '';
+                emailStatus.textContent = '';
+                phoneStatus.textContent = '';
+                passwordMatchStatus.textContent = '';
+                // Remove alternative phones
+                altPhoneContainer.innerHTML = '';
+                altPhoneCount = 0;
+                signupSubmitBtn.textContent = 'Sign Up';
+                signupSubmitBtn.style.backgroundColor = '';
+                signupSubmitBtn.style.color = '';
+            });
+
+            // ===== EVENT LISTENERS =====
+            loginForm.addEventListener('submit', handleLogin);
+            signupForm.addEventListener('submit', handleSignup);
+
+            // ===== INIT =====
+            fetchUsers();
+
         })();
     </script>
 
