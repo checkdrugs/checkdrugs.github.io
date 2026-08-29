@@ -30,7 +30,7 @@
 
     <!-- ===== SIGNUP FORM ===== -->
     <div id="signupView" style="display:none;">
-        <h1>⏺ Create Account <span style="font-size:0.6em;color:#999;">ver 1.6</span></h1>
+        <h1>⏺ Create Account <span style="font-size:0.6em;color:#999;">ver 1.7</span></h1>
         <p>Fill in your details to sign up</p>
 
         <form id="signupForm">
@@ -170,7 +170,12 @@
             // ===== UTILITY FUNCTIONS =====
 
             function normalizePhone(phoneNum) {
+                // Handle null, undefined, or non-string values
                 if (!phoneNum) return '';
+                if (typeof phoneNum !== 'string') {
+                    phoneNum = String(phoneNum);
+                }
+                
                 let cleaned = phoneNum.replace(/\s/g, '');
                 if (cleaned.startsWith('0') && cleaned.length === 10) {
                     cleaned = '+254' + cleaned.substring(1);
@@ -290,10 +295,8 @@
                 phoneStatus.textContent = 'Checking...';
                 phoneStatus.className = 'status-checking checking';
 
-                // Force fetch fresh data
                 await fetchUsers();
 
-                // Check against all users directly
                 const normalizedVal = normalizePhone(val);
                 let taken = false;
                 for (let u of allUsers) {
@@ -409,7 +412,6 @@
             async function handleSignup(e) {
                 e.preventDefault();
 
-                // Show loading animation immediately
                 signupSubmitBtn.classList.add('loading');
                 signupSubmitBtn.textContent = 'Creating Account';
                 signupStatus.innerHTML = 'Creating account<span class="ellipsis"></span>';
