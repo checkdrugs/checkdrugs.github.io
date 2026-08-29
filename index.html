@@ -30,7 +30,7 @@
 
     <!-- ===== SIGNUP FORM ===== -->
     <div id="signupView" style="display:none;">
-        <h1>⏺ Create Account</h1>
+        <h1>⏺ Create Account <span style="font-size:0.6em;color:#999;">ver 1.6</span></h1>
         <p>Fill in your details to sign up</p>
 
         <form id="signupForm">
@@ -165,6 +165,7 @@
 
             let altPhoneCount = 0;
             let allUsers = [];
+            let isChecking = false;
 
             // ===== UTILITY FUNCTIONS =====
 
@@ -221,10 +222,14 @@
 
             // ===== CHECK FUNCTIONS =====
             async function checkUsername() {
+                if (isChecking) return;
+                isChecking = true;
+
                 const val = signupUsername.value.trim();
                 if (!val) {
                     usernameStatus.textContent = 'Please enter a username';
                     usernameStatus.className = 'status-taken';
+                    isChecking = false;
                     return;
                 }
 
@@ -240,13 +245,18 @@
                     usernameStatus.textContent = '✅ Username available';
                     usernameStatus.className = 'status-available';
                 }
+                isChecking = false;
             }
 
             async function checkEmail() {
+                if (isChecking) return;
+                isChecking = true;
+
                 const val = email.value.trim();
                 if (!val) {
                     emailStatus.textContent = 'Please enter an email';
                     emailStatus.className = 'status-taken';
+                    isChecking = false;
                     return;
                 }
 
@@ -262,13 +272,18 @@
                     emailStatus.textContent = '✅ Email available';
                     emailStatus.className = 'status-available';
                 }
+                isChecking = false;
             }
 
             async function checkPhone() {
+                if (isChecking) return;
+                isChecking = true;
+
                 const val = phone.value.trim();
                 if (!val) {
                     phoneStatus.textContent = 'Please enter a phone number';
                     phoneStatus.className = 'status-taken';
+                    isChecking = false;
                     return;
                 }
 
@@ -278,7 +293,7 @@
                 // Force fetch fresh data
                 await fetchUsers();
 
-                // Check against all users
+                // Check against all users directly
                 const normalizedVal = normalizePhone(val);
                 let taken = false;
                 for (let u of allUsers) {
@@ -298,6 +313,7 @@
                     phoneStatus.textContent = '✅ Phone available';
                     phoneStatus.className = 'status-available';
                 }
+                isChecking = false;
             }
 
             // ===== VALIDATE SIGNUP =====
