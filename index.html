@@ -48,7 +48,10 @@
             </div>
             <div>
                 <label for="signupUsername">Username</label>
-                <input type="text" id="signupUsername" required />
+                <div style="display:flex;gap:5px;align-items:center;">
+                    <input type="text" id="signupUsername" required style="flex:1;" />
+                    <button type="button" id="checkUsernameBtn">Check</button>
+                </div>
                 <span id="usernameStatus"></span>
             </div>
             <div>
@@ -58,7 +61,10 @@
             </div>
             <div>
                 <label for="phone">Phone Number</label>
-                <input type="tel" id="phone" placeholder="+1234567890" required />
+                <div style="display:flex;gap:5px;align-items:center;">
+                    <input type="tel" id="phone" placeholder="e.g., 0704556585 or +254704556585" required style="flex:1;" />
+                    <button type="button" id="checkPhoneBtn">Check</button>
+                </div>
                 <span id="phoneStatus"></span>
             </div>
             <div>
@@ -103,6 +109,13 @@
             75% { content: '...'; }
             100% { content: ''; }
         }
+        .checking::after {
+            content: '';
+            animation: dots 0.8s steps(4, end) infinite;
+        }
+        .status-available { color: green; }
+        .status-taken { color: red; }
+        .status-checking { color: #ff9800; }
     </style>
 
     <script>
@@ -143,31 +156,37 @@
             const passwordMatchStatus = document.getElementById('passwordMatchStatus');
             const signupSubmitBtn = document.getElementById('signupSubmitBtn');
 
+            const checkUsernameBtn = document.getElementById('checkUsernameBtn');
+            const checkPhoneBtn = document.getElementById('checkPhoneBtn');
+
             let altPhoneCount = 0;
             let allUsers = [];
+            let usernameChecked = false;
+            let phoneChecked = false;
+            let usernameAvailable = false;
+            let phoneAvailable = false;
 
-            // ===== FETCH USERS =====
-            async function fetchUsers() {
-                try {
-                    const url = SCRIPT_URL + '?action=getUsers';
-                    console.log('Fetching users from:', url);
-                    
-                    const response = await fetch(url);
-                    
-                    if (!response.ok) {
-                        throw new Error('HTTP error! status: ' + response.status);
-                    }
-                    
-                    const data = await response.json();
-                    allUsers = data || [];
-                    return allUsers;
-                } catch (error) {
-                    console.error('Error fetching users:', error);
-                    return [];
+            // ===== UTILITY FUNCTIONS =====
+
+            // Normalize phone number: remove spaces, convert 0 to +254 for Kenya
+            function normalizePhone(phoneNum) {
+                let cleaned = phoneNum.replace(/\s/g, '');
+                
+                // If starts with 0 and is 10 digits (Kenyan), convert to +254
+                if (cleaned.startsWith('0') && cleaned.length === 10) {
+                    cleaned = '+254' + cleaned.substring(1);
                 }
+                // If starts with 0 and is 9 digits (Kenyan without leading 0), add +254
+                if (cleaned.startsWith('0') && cleaned.length === 9) {
+                    cleaned = '+254' + cleaned.substring(1);
+                }
+                // If starts with 254 (no plus), add plus
+                if (cleaned.startsWith('254') && cleaned.length === 12) {
+                    cleaned = '+' + cleaned;
+                }
+                return cleaned;
             }
 
-            // ===== CHECK AVAILABILITY =====
             function isUsernameTaken(username) {
                 return allUsers.some(u => u.username && u.username.toLowerCase() === username.toLowerCase());
             }
@@ -177,7 +196,12 @@
             }
 
             function isPhoneTaken(phoneNum) {
-                return allUsers.some(u => u.phone && u.phone === phoneNum);
+                const normalized = normalizePhone(phoneNum);
+                return allUsers.some(u => {
+                    if (!u.phone) return false;
+                    const userPhone = normalizePhone(u.phone);
+                    return userPhone === normalized;
+                });
             }
 
             // ===== GENERATE USER ID =====
@@ -186,7 +210,80 @@
                 return 'JB' + randomNum + 'K';
             }
 
-            // ===== VALIDATION =====
+            // ===== FETCH USERS =====
+            async function fetchUsers() {
+                try {
+                    const url = SCRIPT_URL + '?action=getUsers';
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error('HTTP error! status: ' + response.status);
+                    const data = await response.json();
+                    allUsers = data || [];
+                    return allUsers;
+                } catch (error) {
+                    console.error('Error fetching users:', error);
+                    return [];
+                }
+            }
+
+            // ===== CHECK USERNAME =====
+            async function checkUsername() {
+                const val = signupUsername.value.trim();
+                if (!val) {
+                    usernameStatus.textContent = 'Please enter a username';
+                    usernameStatus.className = 'status-taken';
+                    usernameChecked = false;
+                    return;
+                }
+
+                usernameStatus.textContent = 'Checking...';
+                usernameStatus.className = 'status-checking checking';
+
+                await fetchUsers();
+
+                if (isUsernameTaken(val)) {
+                    usernameStatus.textContent = '❌ Username already taken';
+                    usernameStatus.className = 'status-taken';
+                    usernameChecked = true;
+                    usernameAvailable = false;
+                } else {
+                    usernameStatus.textContent = '✅ Username available';
+                    usernameStatus.className = 'status-available';
+                    usernameChecked = true;
+                    usernameAvailable = true;
+                }
+            }
+
+            // ===== CHECK PHONE =====
+            async function checkPhone() {
+                const val = phone.value.trim();
+                if (!val) {
+                    phoneStatus.textContent = 'Please enter a phone number';
+                    phoneStatus.className = 'status-taken';
+                    phoneChecked = false;
+                    return;
+                }
+
+                phoneStatus.textContent = 'Checking...';
+                phoneStatus.className = 'status-checking checking';
+
+                await fetchUsers();
+
+                const normalized = normalizePhone(val);
+                
+                if (isPhoneTaken(val)) {
+                    phoneStatus.textContent = '❌ Phone already registered';
+                    phoneStatus.className = 'status-taken';
+                    phoneChecked = true;
+                    phoneAvailable = false;
+                } else {
+                    phoneStatus.textContent = '✅ Phone available';
+                    phoneStatus.className = 'status-available';
+                    phoneChecked = true;
+                    phoneAvailable = true;
+                }
+            }
+
+            // ===== VALIDATE SIGNUP =====
             function validateSignup() {
                 if (!surname.value.trim()) { signupError.textContent = 'Surname is required'; return false; }
                 if (!firstName.value.trim()) { signupError.textContent = 'First Name is required'; return false; }
@@ -196,19 +293,33 @@
                 if (!password.value) { signupError.textContent = 'Password is required'; return false; }
                 if (password.value !== confirmPassword.value) { signupError.textContent = 'Passwords do not match'; return false; }
 
-                if (isUsernameTaken(signupUsername.value.trim())) {
-                    signupError.textContent = 'Username is already taken';
+                // Check username availability
+                if (!usernameChecked) {
+                    signupError.textContent = 'Please check username availability first';
                     return false;
                 }
+                if (!usernameAvailable) {
+                    signupError.textContent = 'Username is not available';
+                    return false;
+                }
+
+                // Check phone availability
+                if (!phoneChecked) {
+                    signupError.textContent = 'Please check phone availability first';
+                    return false;
+                }
+                if (!phoneAvailable) {
+                    signupError.textContent = 'Phone number is not available';
+                    return false;
+                }
+
+                // Check email
                 if (isEmailTaken(email.value.trim())) {
                     signupError.textContent = 'Email is already registered';
                     return false;
                 }
-                if (isPhoneTaken(phone.value.trim())) {
-                    signupError.textContent = 'Phone number is already registered';
-                    return false;
-                }
 
+                // Check alternative phones
                 const altPhones = document.querySelectorAll('.alt-phone-input');
                 for (let input of altPhones) {
                     if (input.value.trim() && isPhoneTaken(input.value.trim())) {
@@ -221,7 +332,7 @@
                 return true;
             }
 
-            // ===== SIGNUP SUBMIT (USING GET) =====
+            // ===== SIGNUP SUBMIT =====
             async function handleSignup(e) {
                 e.preventDefault();
 
@@ -230,7 +341,7 @@
                 const altPhones = [];
                 document.querySelectorAll('.alt-phone-input').forEach(input => {
                     if (input.value.trim()) {
-                        altPhones.push(input.value.trim());
+                        altPhones.push(normalizePhone(input.value.trim()));
                     }
                 });
 
@@ -241,31 +352,24 @@
                     otherNames: otherNames.value.trim(),
                     username: signupUsername.value.trim(),
                     email: email.value.trim(),
-                    phone: phone.value.trim(),
+                    phone: normalizePhone(phone.value.trim()),
                     altPhones: altPhones.join(','),
                     password: password.value,
                     createdAt: new Date().toISOString()
                 };
 
-                // Button loading animation
                 signupSubmitBtn.classList.add('loading');
                 signupSubmitBtn.textContent = 'Creating Account';
                 signupStatus.innerHTML = 'Creating account<span class="ellipsis"></span>';
 
                 try {
-                    // Build URL with parameters for GET request
                     const params = new URLSearchParams();
                     params.append('action', 'signup');
                     params.append('data', JSON.stringify(userData));
                     const url = SCRIPT_URL + '?' + params.toString();
-                    
-                    console.log('Sending signup request to:', url);
-                    
+
                     const response = await fetch(url);
-                    
-                    if (!response.ok) {
-                        throw new Error('HTTP error! status: ' + response.status);
-                    }
+                    if (!response.ok) throw new Error('HTTP error! status: ' + response.status);
 
                     const result = await response.json();
 
@@ -273,7 +377,7 @@
                         signupStatus.innerHTML = '✅ Account created! Redirecting to login...';
                         signupSubmitBtn.classList.remove('loading');
                         signupSubmitBtn.textContent = '✓ Account Created!';
-                        
+
                         setTimeout(() => {
                             signupView.style.display = 'none';
                             loginView.style.display = 'block';
@@ -283,6 +387,12 @@
                             signupStatus.textContent = '';
                             altPhoneContainer.innerHTML = '';
                             altPhoneCount = 0;
+                            usernameStatus.textContent = '';
+                            phoneStatus.textContent = '';
+                            emailStatus.textContent = '';
+                            passwordMatchStatus.textContent = '';
+                            usernameChecked = false;
+                            phoneChecked = false;
                             loginError.textContent = 'Account created! Please login.';
                             loginError.style.color = 'green';
                             fetchUsers();
@@ -315,14 +425,12 @@
                 }
 
                 loginError.textContent = '';
-                
-                // Button loading animation
+
                 loginBtn.classList.add('loading');
                 loginBtn.textContent = 'Logging In';
                 loginStatus.innerHTML = 'Logging in<span class="ellipsis"></span>';
 
                 try {
-                    // Fetch users if not loaded
                     if (allUsers.length === 0) {
                         await fetchUsers();
                     }
@@ -333,11 +441,9 @@
                     );
 
                     if (user) {
-                        loginError.textContent = '';
-                        loginError.style.color = '';
                         loginStatus.innerHTML = '✅ Login successful! Redirecting...';
                         sessionStorage.setItem('loggedInUser', JSON.stringify(user));
-                        
+
                         setTimeout(() => {
                             window.location.href = 'search.html';
                         }, 1000);
@@ -358,52 +464,41 @@
             }
 
             // ===== REAL-TIME VALIDATION =====
-            signupUsername.addEventListener('blur', function() {
-                if (this.value.trim() && isUsernameTaken(this.value.trim())) {
-                    usernameStatus.textContent = '❌ Username taken';
-                    usernameStatus.style.color = 'red';
-                } else if (this.value.trim()) {
-                    usernameStatus.textContent = '✅ Username available';
-                    usernameStatus.style.color = 'green';
-                } else {
-                    usernameStatus.textContent = '';
-                }
-            });
-
             email.addEventListener('blur', function() {
                 if (this.value.trim() && isEmailTaken(this.value.trim())) {
                     emailStatus.textContent = '❌ Email already registered';
-                    emailStatus.style.color = 'red';
+                    emailStatus.className = 'status-taken';
                 } else if (this.value.trim()) {
                     emailStatus.textContent = '✅ Email available';
-                    emailStatus.style.color = 'green';
+                    emailStatus.className = 'status-available';
                 } else {
                     emailStatus.textContent = '';
-                }
-            });
-
-            phone.addEventListener('blur', function() {
-                if (this.value.trim() && isPhoneTaken(this.value.trim())) {
-                    phoneStatus.textContent = '❌ Phone already registered';
-                    phoneStatus.style.color = 'red';
-                } else if (this.value.trim()) {
-                    phoneStatus.textContent = '✅ Phone available';
-                    phoneStatus.style.color = 'green';
-                } else {
-                    phoneStatus.textContent = '';
                 }
             });
 
             confirmPassword.addEventListener('input', function() {
                 if (this.value && this.value === password.value) {
                     passwordMatchStatus.textContent = '✅ Passwords match';
-                    passwordMatchStatus.style.color = 'green';
+                    passwordMatchStatus.className = 'status-available';
                 } else if (this.value) {
                     passwordMatchStatus.textContent = '❌ Passwords do not match';
-                    passwordMatchStatus.style.color = 'red';
+                    passwordMatchStatus.className = 'status-taken';
                 } else {
                     passwordMatchStatus.textContent = '';
                 }
+            });
+
+            // Reset check status when username/phone changes
+            signupUsername.addEventListener('input', function() {
+                usernameChecked = false;
+                usernameAvailable = false;
+                usernameStatus.textContent = '';
+            });
+
+            phone.addEventListener('input', function() {
+                phoneChecked = false;
+                phoneAvailable = false;
+                phoneStatus.textContent = '';
             });
 
             // ===== ADD ALTERNATIVE PHONE =====
@@ -413,31 +508,34 @@
                 div.style.marginTop = '5px';
                 div.innerHTML = `
                     <label>Alternative Phone ${altPhoneCount}</label>
-                    <input type="tel" class="alt-phone-input" placeholder="+1234567890" />
-                    <button type="button" class="remove-alt-phone" style="margin-left:5px;">✕</button>
+                    <div style="display:flex;gap:5px;align-items:center;">
+                        <input type="tel" class="alt-phone-input" placeholder="e.g., 0704556585" style="flex:1;" />
+                        <button type="button" class="remove-alt-phone">✕</button>
+                    </div>
+                    <span class="alt-phone-status"></span>
                 `;
                 altPhoneContainer.appendChild(div);
+
+                const altInput = div.querySelector('.alt-phone-input');
+                const altStatus = div.querySelector('.alt-phone-status');
 
                 div.querySelector('.remove-alt-phone').addEventListener('click', function() {
                     altPhoneContainer.removeChild(div);
                     altPhoneCount--;
                 });
 
-                div.querySelector('.alt-phone-input').addEventListener('blur', function() {
-                    const statusSpan = this.parentElement.querySelector('.alt-phone-status') || document.createElement('span');
-                    if (!this.parentElement.querySelector('.alt-phone-status')) {
-                        statusSpan.className = 'alt-phone-status';
-                        statusSpan.style.marginLeft = '5px';
-                        this.parentElement.appendChild(statusSpan);
-                    }
-                    if (this.value.trim() && isPhoneTaken(this.value.trim())) {
-                        statusSpan.textContent = '❌ Taken';
-                        statusSpan.style.color = 'red';
-                    } else if (this.value.trim()) {
-                        statusSpan.textContent = '✅ Available';
-                        statusSpan.style.color = 'green';
+                altInput.addEventListener('blur', function() {
+                    if (this.value.trim()) {
+                        const normalized = normalizePhone(this.value.trim());
+                        if (isPhoneTaken(this.value.trim())) {
+                            altStatus.textContent = '❌ Already registered';
+                            altStatus.className = 'status-taken';
+                        } else {
+                            altStatus.textContent = '✅ Available';
+                            altStatus.className = 'status-available';
+                        }
                     } else {
-                        statusSpan.textContent = '';
+                        altStatus.textContent = '';
                     }
                 });
             });
@@ -448,6 +546,7 @@
                 signupView.style.display = 'block';
                 loginError.textContent = '';
                 loginStatus.textContent = '';
+                fetchUsers();
             });
 
             cancelSignupBtn.addEventListener('click', function() {
@@ -462,6 +561,8 @@
                 passwordMatchStatus.textContent = '';
                 altPhoneContainer.innerHTML = '';
                 altPhoneCount = 0;
+                usernameChecked = false;
+                phoneChecked = false;
                 signupSubmitBtn.textContent = 'Sign Up';
                 signupSubmitBtn.classList.remove('loading');
             });
@@ -469,6 +570,8 @@
             // ===== EVENT LISTENERS =====
             loginForm.addEventListener('submit', handleLogin);
             signupForm.addEventListener('submit', handleSignup);
+            checkUsernameBtn.addEventListener('click', checkUsername);
+            checkPhoneBtn.addEventListener('click', checkPhone);
 
             // ===== INIT =====
             fetchUsers();
