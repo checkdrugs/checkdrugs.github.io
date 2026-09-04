@@ -3,475 +3,265 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Search</title>
+    <title>Search · Sync Master</title>
+
+    <style>
+        /* ---------- RESET & BASE ---------- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            background: #f4f6f8;
+            padding: 2rem 1rem;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+        .container {
+            max-width: 900px;
+            width: 100%;
+            background: white;
+            border-radius: 0.75rem;
+            padding: 2rem 2.5rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
+        }
+        h1 {
+            font-weight: 450;
+            font-size: 1.8rem;
+            color: #1e293b;
+            margin-bottom: 0.25rem;
+        }
+        .subhead {
+            color: #64748b;
+            border-bottom: 1px solid #e9edf2;
+            padding-bottom: 1rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .subhead a {
+            color: #475569;
+            text-decoration: none;
+            font-size: 0.9rem;
+            padding: 0.3rem 1rem;
+            border: 1px solid #dce1e6;
+            border-radius: 2rem;
+            transition: 0.15s;
+        }
+        .subhead a:hover {
+            background: #f1f4f8;
+        }
+
+        /* ---------- SEARCH BAR ---------- */
+        .search-bar {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .search-bar input {
+            flex: 1;
+            padding: 0.7rem 1rem;
+            font-size: 1rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 0.5rem;
+            background: white;
+            transition: 0.15s;
+            min-width: 180px;
+        }
+        .search-bar input:focus {
+            outline: none;
+            border-color: #4b7b9e;
+            box-shadow: 0 0 0 3px rgba(55, 100, 140, 0.15);
+        }
+
+        .search-bar button {
+            padding: 0.7rem 2rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.6s ease, color 0.6s ease;
+            font-size: 1rem;
+            background-color: #1e293b;
+            color: white;
+        }
+        .search-bar button:hover {
+            background-color: #0f172a;
+        }
+
+        /* ---------- PULSATING ANIMATION ---------- */
+        @keyframes pulseColor {
+            0%   { background-color: #4CAF50; color: white; }
+            25%  { background-color: #66BB6A; color: white; }
+            50%  { background-color: #2E7D32; color: white; }
+            75%  { background-color: #43A047; color: white; }
+            100% { background-color: #4CAF50; color: white; }
+        }
+        .search-bar button.pulsing {
+            animation: pulseColor 1.0s ease-in-out infinite;
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        /* ---------- FILTER SECTION ---------- */
+        .filter-section {
+            margin-bottom: 2rem;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 1rem;
+        }
+        .filter-toggle {
+            background: #1e293b;
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            padding: 0.6rem 1.5rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.15s;
+            font-size: 0.95rem;
+        }
+        .filter-toggle:hover {
+            background: #0f172a;
+        }
+
+        .filter-options {
+            display: none;
+            flex-wrap: wrap;
+            gap: 1.2rem 2rem;
+            background: #f8fafc;
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            border: 1px solid #e2e8f0;
+            flex: 1;
+        }
+        .filter-options.open {
+            display: flex;
+        }
+        .filter-options label {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.95rem;
+            color: #1e293b;
+            cursor: pointer;
+        }
+        .filter-options input[type="checkbox"] {
+            width: 1rem;
+            height: 1rem;
+            accent-color: #1e293b;
+        }
+
+        /* ---------- RESULTS PLACEHOLDER ---------- */
+        .results-placeholder {
+            border: 2px dashed #dce1e6;
+            border-radius: 0.5rem;
+            padding: 3rem 1.5rem;
+            text-align: center;
+            color: #94a3b8;
+            font-size: 1.1rem;
+        }
+        .results-placeholder p {
+            margin-top: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        /* small screens */
+        @media (max-width: 600px) {
+            .container { padding: 1.5rem; }
+            .search-bar { flex-direction: column; align-items: stretch; }
+            .filter-options { flex-direction: column; gap: 0.6rem; }
+        }
+    </style>
 </head>
 <body>
 
-    <h1>Search Online Master</h1>
-    <a href="index.html">← Logout</a>
+<div class="container">
+    <h1>🔍 Search Online Master</h1>
+    <div class="subhead">
+        <span>Find drugs in the database</span>
+        <a href="index.html">← Logout</a>
+    </div>
 
-    <!-- Search Form -->
-    <form id="searchForm" style="margin:10px 0;">
-        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
-            <input type="text" id="searchInput" placeholder="Search..." style="padding:5px;width:300px;" />
-            <button type="submit">Search</button>
-        </div>
-        
-        <div style="margin-top:10px;display:flex;gap:20px;flex-wrap:wrap;align-items:center;">
-            <!-- Search by Drug Name checkbox -->
-            <label>
-                <input type="checkbox" id="searchByName" checked />
-                Search by Drug Name
-            </label>
-            
-            <!-- Search by What It Treats checkbox -->
-            <label>
-                <input type="checkbox" id="searchByTreats" checked />
-                Search by What It Treats
-            </label>
-            
-            <!-- Form filter (dropdown) -->
-            <div>
-                <label>Form Filter: 
-                    <select id="formFilter" style="padding:5px;">
-                        <option value="">All Forms</option>
-                    </select>
-                </label>
-            </div>
-        </div>
-    </form>
+    <!-- SEARCH BAR -->
+    <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="Search by drug name, ID, ingredients…" />
+        <button id="searchBtn">Search</button>
+    </div>
 
-    <button id="toggleAllBtn">Show All</button>
-    <div id="searchStats"></div>
-
-    <!-- Block view for search results -->
-    <div id="blockView"></div>
-
-    <!-- Table view for "Show All" -->
-    <div id="tableView" style="display:none;">
-        <table border="1" cellpadding="5" cellspacing="0" style="width:100%;border-collapse:collapse;font-family:monospace;font-size:13px;">
-            <thead>
-                <tr style="background:#f0f0f0;font-weight:bold;">
-                    <th>ID</th>
-                    <th>Drug Class</th>
-                    <th>Drug</th>
-                    <th>Active Ingredients</th>
-                    <th>Presentation</th>
-                    <th>Form</th>
-                    <th>Treats</th>
-                    <th>Balance</th>
-                </tr>
-            </thead>
-            <tbody id="tableBody">
-                <tr><td colspan="8" style="text-align:center;">Loading...</td></tr>
-            </tbody>
-        </table>
-
-        <!-- Pagination for table view -->
-        <div id="pagination" style="margin-top:10px;">
-            <button id="prevBtn">← Previous</button>
-            <span id="pageInfo">Page 1 of 1</span>
-            <button id="nextBtn">Next →</button>
+    <!-- FILTER TOGGLE & OPTIONS -->
+    <div class="filter-section">
+        <button class="filter-toggle" id="filterToggle">☰ Filters</button>
+        <div class="filter-options" id="filterOptions">
+            <label><input type="checkbox" checked /> ID</label>
+            <label><input type="checkbox" checked /> Drug Name</label>
+            <label><input type="checkbox" checked /> Form</label>
+            <label><input type="checkbox" checked /> Presentation Size</label>
+            <label><input type="checkbox" checked /> What It Treats</label>
         </div>
     </div>
 
-    <script>
-        (function() {
-            const API_URL = 'https://script.google.com/macros/s/AKfycbzzKAmnfCe9O7I56Tb8Fnye-2-GMvpGkyYR574E7uULX2wao9lK77Z9jn6WOiPCZzru/exec';
+    <!-- RESULTS PLACEHOLDER -->
+    <div class="results-placeholder">
+        <div>🔎 Enter a search term and press <strong>Search</strong></div>
+        <p>You can also filter which columns to search using the <strong>Filters</strong> button.</p>
+    </div>
+</div>
 
-            const searchForm = document.getElementById('searchForm');
-            const searchInput = document.getElementById('searchInput');
-            const searchByName = document.getElementById('searchByName');
-            const searchByTreats = document.getElementById('searchByTreats');
-            const formFilter = document.getElementById('formFilter');
-            const searchStats = document.getElementById('searchStats');
-            const blockView = document.getElementById('blockView');
-            const tableView = document.getElementById('tableView');
-            const tableBody = document.getElementById('tableBody');
-            const toggleAllBtn = document.getElementById('toggleAllBtn');
-            const prevBtn = document.getElementById('prevBtn');
-            const nextBtn = document.getElementById('nextBtn');
-            const pageInfo = document.getElementById('pageInfo');
+<script>
+    (function() {
+        // ---------- DOM refs ----------
+        const searchBtn = document.getElementById('searchBtn');
+        const filterToggle = document.getElementById('filterToggle');
+        const filterOptions = document.getElementById('filterOptions');
 
-            let allData = [];
-            let dataLoaded = false;
-            let isLoading = false;
-            let currentPage = 1;
-            const ITEMS_PER_PAGE = 15;
-            let isTableView = false;
+        // ---------- Toggle filter visibility ----------
+        filterToggle.addEventListener('click', function() {
+            filterOptions.classList.toggle('open');
+            // update button text (optional)
+            this.textContent = filterOptions.classList.contains('open') ? '✕ Close Filters' : '☰ Filters';
+        });
 
-            // ---------- Fetch data silently ----------
-            async function fetchAllData() {
-                if (dataLoaded) return allData;
-                if (isLoading) return allData;
+        // ---------- Pulsating animation on search button ----------
+        searchBtn.addEventListener('click', function() {
+            // Start pulsing
+            this.classList.add('pulsing');
+            this.textContent = 'Searching…';
 
-                isLoading = true;
-                try {
-                    const response = await fetch(API_URL);
-                    const data = await response.json();
-                    
-                    if (Array.isArray(data)) {
-                        allData = data;
-                        dataLoaded = true;
-                        populateFormDropdown();
-                        return data;
-                    } else if (data && typeof data === 'object') {
-                        const values = Object.values(data);
-                        for (let val of values) {
-                            if (Array.isArray(val)) {
-                                allData = val;
-                                dataLoaded = true;
-                                populateFormDropdown();
-                                return val;
-                            }
-                        }
-                        return null;
-                    }
-                    return null;
-                } catch (error) {
-                    console.error('Fetch error:', error);
-                    return null;
-                } finally {
-                    isLoading = false;
-                }
+            // Simulate a search delay (demo only)
+            setTimeout(() => {
+                this.classList.remove('pulsing');
+                this.textContent = 'Search';
+                // In the real version, you would perform the actual search here.
+                // For now, just log.
+                console.log('Search executed (simulated)');
+            }, 2000);
+        });
+
+        // Optional: remove pulsing if user clicks again? No, it's fine.
+
+        // ---------- (Demo) initial state ----------
+        // filter options hidden by default
+        filterOptions.classList.remove('open');
+        filterToggle.textContent = '☰ Filters';
+
+        // ---------- (Placeholder) search with Enter key ----------
+        document.getElementById('searchInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                searchBtn.click();
             }
-
-            // ---------- Populate form dropdown with unique forms ----------
-            function populateFormDropdown() {
-                if (!allData || allData.length === 0) return;
-                
-                const forms = new Set();
-                allData.forEach(row => {
-                    let form = '';
-                    if (Array.isArray(row)) {
-                        form = row[5] || '';
-                    } else if (typeof row === 'object') {
-                        form = row.Form || row.form || row[5] || '';
-                    }
-                    if (form) forms.add(form);
-                });
-
-                formFilter.innerHTML = '<option value="">All Forms</option>';
-                
-                const sortedForms = Array.from(forms).sort();
-                sortedForms.forEach(form => {
-                    const option = document.createElement('option');
-                    option.value = form;
-                    option.textContent = form;
-                    formFilter.appendChild(option);
-                });
-            }
-
-            // ---------- Search/filter data ----------
-            function searchData() {
-                if (!allData || !allData.length) return [];
-
-                const query = searchInput.value.trim().toLowerCase();
-                const selectedForm = formFilter.value;
-                const searchByNameEnabled = searchByName.checked;
-                const searchByTreatsEnabled = searchByTreats.checked;
-
-                // If no query and no form filter, return empty
-                if (!query && !selectedForm) return [];
-
-                return allData.filter(row => {
-                    let drug, ingredients, drugClass, form, treats;
-                    
-                    if (Array.isArray(row)) {
-                        drug = (row[2] || '').toString().toLowerCase();
-                        ingredients = (row[3] || '').toString().toLowerCase();
-                        drugClass = (row[1] || '').toString().toLowerCase();
-                        form = (row[5] || '').toString();
-                        treats = (row[6] || '').toString().toLowerCase();
-                    } else if (typeof row === 'object') {
-                        drug = (row.Drug || row.drug || row[2] || '').toString().toLowerCase();
-                        ingredients = (row['Active Ingredients'] || row.ingredients || row[3] || '').toString().toLowerCase();
-                        drugClass = (row['Drug Class'] || row.drugClass || row[1] || '').toString().toLowerCase();
-                        form = (row.Form || row.form || row[5] || '').toString();
-                        treats = (row['What It Treats'] || row.treats || row[6] || '').toString().toLowerCase();
-                    } else {
-                        return false;
-                    }
-
-                    // Form filter (always applied if selected)
-                    let formMatch = true;
-                    if (selectedForm) {
-                        formMatch = form === selectedForm;
-                    }
-
-                    // If no query, only form filter applies
-                    if (!query) {
-                        return formMatch;
-                    }
-
-                    // Search by Drug Name (if checkbox is checked)
-                    let nameMatch = true;
-                    if (searchByNameEnabled) {
-                        nameMatch = drug.includes(query) || 
-                                   ingredients.includes(query) ||
-                                   drugClass.includes(query);
-                    }
-
-                    // Search by What It Treats (if checkbox is checked)
-                    let treatsMatch = true;
-                    if (searchByTreatsEnabled) {
-                        // Split query by commas, spaces, or semicolons
-                        const searchTerms = query.split(/[,;\s]+/).filter(t => t.length > 0);
-                        treatsMatch = searchTerms.some(term => {
-                            return treats.includes(term);
-                        });
-                    }
-
-                    // If both checkboxes are unchecked, return false (no search possible)
-                    if (!searchByNameEnabled && !searchByTreatsEnabled) {
-                        return false;
-                    }
-
-                    // If only one checkbox is checked, only that constraint applies
-                    if (searchByNameEnabled && !searchByTreatsEnabled) {
-                        return nameMatch && formMatch;
-                    }
-                    if (!searchByNameEnabled && searchByTreatsEnabled) {
-                        return treatsMatch && formMatch;
-                    }
-
-                    // Both checkboxes are checked - both must match
-                    return nameMatch && treatsMatch && formMatch;
-                });
-            }
-
-            // ---------- Render block view ----------
-            function renderBlockView(results) {
-                const query = searchInput.value.trim();
-                
-                if (!results || results.length === 0) {
-                    blockView.innerHTML = `<p>No results found</p>`;
-                    searchStats.textContent = '0 results';
-                    return;
-                }
-
-                let html = '';
-                results.forEach(row => {
-                    let id, drugClass, drug, ingredients, presentation, form, treats, balance;
-                    
-                    if (Array.isArray(row)) {
-                        id = row[0] || '';
-                        drugClass = row[1] || '';
-                        drug = row[2] || '';
-                        ingredients = row[3] || '';
-                        presentation = row[4] || '';
-                        form = row[5] || '';
-                        treats = row[6] || '';
-                        balance = row[7] || 0;
-                    } else if (typeof row === 'object') {
-                        id = row.ID || row.id || row[0] || '';
-                        drugClass = row['Drug Class'] || row.drugClass || row[1] || '';
-                        drug = row.Drug || row.drug || row[2] || '';
-                        ingredients = row['Active Ingredients'] || row.ingredients || row[3] || '';
-                        presentation = row['Presentation Size'] || row.presentation || row[4] || '';
-                        form = row.Form || row.form || row[5] || '';
-                        treats = row['What It Treats'] || row.treats || row[6] || '';
-                        balance = row.Balance || row.balance || row[7] || 0;
-                    } else {
-                        return;
-                    }
-
-                    html += `<div style="border:1px solid #ccc;padding:10px;margin:5px 0;">`;
-                    html += `<strong>${drug || 'Unnamed Drug'}</strong><br>`;
-                    if (ingredients) html += `Ingredients: ${ingredients}<br>`;
-                    if (form) html += `Form: ${form}<br>`;
-                    if (presentation) html += `Presentation: ${presentation}<br>`;
-                    if (drugClass) html += `Class: ${drugClass}<br>`;
-                    if (treats) html += `Treats: ${treats}<br>`;
-                    html += `Balance: ${balance}<br>`;
-                    if (id) html += `ID: ${id}<br>`;
-                    html += `</div>`;
-                });
-
-                blockView.innerHTML = html;
-                searchStats.textContent = `${results.length} results (${allData.length} total)`;
-            }
-
-            // ---------- Render table view ----------
-            function renderTableView(page = 1) {
-                const totalPages = Math.ceil(allData.length / ITEMS_PER_PAGE) || 1;
-                
-                if (page > totalPages) page = totalPages;
-                if (page < 1) page = 1;
-                currentPage = page;
-
-                const start = (page - 1) * ITEMS_PER_PAGE;
-                const end = Math.min(start + ITEMS_PER_PAGE, allData.length);
-                const pageItems = allData.slice(start, end);
-
-                searchStats.textContent = `Showing ${start + 1}-${end} of ${allData.length} records`;
-
-                pageInfo.textContent = `Page ${page} of ${totalPages}`;
-                prevBtn.disabled = page <= 1;
-                nextBtn.disabled = page >= totalPages;
-
-                if (pageItems.length === 0) {
-                    tableBody.innerHTML = `<tr><td colspan="8" style="text-align:center;">No data available</td></tr>`;
-                    return;
-                }
-
-                let html = '';
-                pageItems.forEach(row => {
-                    let id, drugClass, drug, ingredients, presentation, form, treats, balance;
-                    
-                    if (Array.isArray(row)) {
-                        id = row[0] || '';
-                        drugClass = row[1] || '';
-                        drug = row[2] || '';
-                        ingredients = row[3] || '';
-                        presentation = row[4] || '';
-                        form = row[5] || '';
-                        treats = row[6] || '';
-                        balance = row[7] || 0;
-                    } else if (typeof row === 'object') {
-                        id = row.ID || row.id || row[0] || '';
-                        drugClass = row['Drug Class'] || row.drugClass || row[1] || '';
-                        drug = row.Drug || row.drug || row[2] || '';
-                        ingredients = row['Active Ingredients'] || row.ingredients || row[3] || '';
-                        presentation = row['Presentation Size'] || row.presentation || row[4] || '';
-                        form = row.Form || row.form || row[5] || '';
-                        treats = row['What It Treats'] || row.treats || row[6] || '';
-                        balance = row.Balance || row.balance || row[7] || 0;
-                    } else {
-                        return;
-                    }
-
-                    html += `<tr>`;
-                    html += `<td>${id}</td>`;
-                    html += `<td>${drugClass}</td>`;
-                    html += `<td><strong>${drug}</strong></td>`;
-                    html += `<td>${ingredients}</td>`;
-                    html += `<td>${presentation}</td>`;
-                    html += `<td>${form}</td>`;
-                    html += `<td>${treats}</td>`;
-                    html += `<td style="text-align:right;font-weight:bold;">${balance}</td>`;
-                    html += `</tr>`;
-                });
-
-                tableBody.innerHTML = html;
-            }
-
-            // ---------- Toggle between views ----------
-            async function toggleView() {
-                if (!isTableView) {
-                    if (!dataLoaded) {
-                        tableBody.innerHTML = `<tr><td colspan="8" style="text-align:center;">Loading...</td></tr>`;
-                        await fetchAllData();
-                    }
-                    
-                    if (allData.length === 0) {
-                        tableBody.innerHTML = `<tr><td colspan="8" style="text-align:center;">No data available</td></tr>`;
-                        return;
-                    }
-                    
-                    renderTableView(1);
-                    blockView.style.display = 'none';
-                    tableView.style.display = 'block';
-                    toggleAllBtn.textContent = 'Hide All';
-                    isTableView = true;
-                } else {
-                    blockView.style.display = 'block';
-                    tableView.style.display = 'none';
-                    toggleAllBtn.textContent = 'Show All';
-                    isTableView = false;
-                    blockView.innerHTML = '';
-                    searchStats.textContent = '';
-                }
-            }
-
-            // ---------- Handle search ----------
-            async function handleSearch(e) {
-                e.preventDefault();
-                
-                if (isTableView) {
-                    toggleView();
-                }
-
-                const query = searchInput.value.trim();
-                const searchByNameEnabled = searchByName.checked;
-                const searchByTreatsEnabled = searchByTreats.checked;
-                const selectedForm = formFilter.value;
-
-                // Check if any search criteria are active
-                const hasQuery = query.length > 0;
-                const hasFormFilter = selectedForm !== '';
-
-                // If no query and no form filter, show nothing
-                if (!hasQuery && !hasFormFilter) {
-                    blockView.innerHTML = '';
-                    searchStats.textContent = 'Please enter a search term or select a form filter';
-                    return;
-                }
-
-                // If query exists but no search checkboxes are checked
-                if (hasQuery && !searchByNameEnabled && !searchByTreatsEnabled) {
-                    blockView.innerHTML = '';
-                    searchStats.textContent = 'Please check at least one search category (Drug Name or What It Treats)';
-                    return;
-                }
-
-                if (!dataLoaded) {
-                    blockView.innerHTML = 'Searching...';
-                    await fetchAllData();
-                }
-
-                const results = searchData();
-                renderBlockView(results);
-            }
-
-            // ---------- Pagination navigation ----------
-            function prevPage() {
-                if (currentPage > 1) {
-                    renderTableView(currentPage - 1);
-                }
-            }
-
-            function nextPage() {
-                const totalPages = Math.ceil(allData.length / ITEMS_PER_PAGE);
-                if (currentPage < totalPages) {
-                    renderTableView(currentPage + 1);
-                }
-            }
-
-            // ---------- Silent load ----------
-            function silentLoad() {
-                fetchAllData().then(data => {
-                    if (data && data.length > 0) {
-                        console.log(`Silently loaded ${data.length} records`);
-                    }
-                });
-            }
-
-            // ---------- Event listeners ----------
-            searchForm.addEventListener('submit', handleSearch);
-            toggleAllBtn.addEventListener('click', toggleView);
-            prevBtn.addEventListener('click', prevPage);
-            nextBtn.addEventListener('click', nextPage);
-
-            // Auto-search when form dropdown changes
-            formFilter.addEventListener('change', handleSearch);
-
-            // Auto-search when checkboxes change
-            searchByName.addEventListener('change', handleSearch);
-            searchByTreats.addEventListener('change', handleSearch);
-
-            // ---------- Initialize ----------
-            silentLoad();
-
-            // Reload when tab becomes visible
-            document.addEventListener('visibilitychange', function() {
-                if (!document.hidden) {
-                    silentLoad();
-                }
-            });
-
-        })();
-    </script>
+        });
+    })();
+</script>
 
 </body>
 </html>
