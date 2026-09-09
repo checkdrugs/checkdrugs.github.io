@@ -4,264 +4,180 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Search · Sync Master</title>
-
-    <style>
-        /* ---------- RESET & BASE ---------- */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-            background: #f4f6f8;
-            padding: 2rem 1rem;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-        }
-        .container {
-            max-width: 900px;
-            width: 100%;
-            background: white;
-            border-radius: 0.75rem;
-            padding: 2rem 2.5rem;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-            border: 1px solid #e2e8f0;
-        }
-        h1 {
-            font-weight: 450;
-            font-size: 1.8rem;
-            color: #1e293b;
-            margin-bottom: 0.25rem;
-        }
-        .subhead {
-            color: #64748b;
-            border-bottom: 1px solid #e9edf2;
-            padding-bottom: 1rem;
-            margin-bottom: 1.5rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .subhead a {
-            color: #475569;
-            text-decoration: none;
-            font-size: 0.9rem;
-            padding: 0.3rem 1rem;
-            border: 1px solid #dce1e6;
-            border-radius: 2rem;
-            transition: 0.15s;
-        }
-        .subhead a:hover {
-            background: #f1f4f8;
-        }
-
-        /* ---------- SEARCH BAR ---------- */
-        .search-bar {
-            display: flex;
-            gap: 0.75rem;
-            margin-bottom: 1.5rem;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-        .search-bar input {
-            flex: 1;
-            padding: 0.7rem 1rem;
-            font-size: 1rem;
-            border: 1px solid #cbd5e1;
-            border-radius: 0.5rem;
-            background: white;
-            transition: 0.15s;
-            min-width: 180px;
-        }
-        .search-bar input:focus {
-            outline: none;
-            border-color: #4b7b9e;
-            box-shadow: 0 0 0 3px rgba(55, 100, 140, 0.15);
-        }
-
-        .search-bar button {
-            padding: 0.7rem 2rem;
-            border: none;
-            border-radius: 0.5rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background-color 0.6s ease, color 0.6s ease;
-            font-size: 1rem;
-            background-color: #1e293b;
-            color: white;
-        }
-        .search-bar button:hover {
-            background-color: #0f172a;
-        }
-
-        /* ---------- PULSATING ANIMATION ---------- */
-        @keyframes pulseColor {
-            0%   { background-color: #4CAF50; color: white; }
-            25%  { background-color: #66BB6A; color: white; }
-            50%  { background-color: #2E7D32; color: white; }
-            75%  { background-color: #43A047; color: white; }
-            100% { background-color: #4CAF50; color: white; }
-        }
-        .search-bar button.pulsing {
-            animation: pulseColor 1.0s ease-in-out infinite;
-            background-color: #4CAF50;
-            color: white;
-        }
-
-        /* ---------- FILTER SECTION ---------- */
-        .filter-section {
-            margin-bottom: 2rem;
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 1rem;
-        }
-        .filter-toggle {
-            background: #1e293b;
-            color: white;
-            border: none;
-            border-radius: 0.5rem;
-            padding: 0.6rem 1.5rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: 0.15s;
-            font-size: 0.95rem;
-        }
-        .filter-toggle:hover {
-            background: #0f172a;
-        }
-
-        .filter-options {
-            display: none;
-            flex-wrap: wrap;
-            gap: 1.2rem 2rem;
-            background: #f8fafc;
-            padding: 1rem 1.5rem;
-            border-radius: 0.5rem;
-            border: 1px solid #e2e8f0;
-            flex: 1;
-        }
-        .filter-options.open {
-            display: flex;
-        }
-        .filter-options label {
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-            font-size: 0.95rem;
-            color: #1e293b;
-            cursor: pointer;
-        }
-        .filter-options input[type="checkbox"] {
-            width: 1rem;
-            height: 1rem;
-            accent-color: #1e293b;
-        }
-
-        /* ---------- RESULTS PLACEHOLDER ---------- */
-        .results-placeholder {
-            border: 2px dashed #dce1e6;
-            border-radius: 0.5rem;
-            padding: 3rem 1.5rem;
-            text-align: center;
-            color: #94a3b8;
-            font-size: 1.1rem;
-        }
-        .results-placeholder p {
-            margin-top: 0.5rem;
-            font-size: 0.95rem;
-        }
-
-        /* small screens */
-        @media (max-width: 600px) {
-            .container { padding: 1.5rem; }
-            .search-bar { flex-direction: column; align-items: stretch; }
-            .filter-options { flex-direction: column; gap: 0.6rem; }
-        }
-    </style>
 </head>
 <body>
 
-<div class="container">
     <h1>🔍 Search Online Master</h1>
-    <div class="subhead">
-        <span>Find drugs in the database</span>
-        <a href="index.html">← Logout</a>
+    <p><a href="index.html">← Logout</a></p>
+
+    <!-- Search Bar -->
+    <form id="searchForm">
+        <input type="text" id="searchInput" placeholder="Search by drug name…" size="40" />
+        <button type="submit" id="searchBtn">Search</button>
+        <button type="button" id="filterToggle">☰ Filters</button>
+    </form>
+
+    <!-- Filter Options (hidden by default) -->
+    <div id="filterOptions" style="display:none; margin-top:0.5rem;">
+        <label><input type="checkbox" checked disabled /> ID</label>
+        <label><input type="checkbox" checked disabled /> Drug Name</label>
+        <label><input type="checkbox" checked disabled /> Form</label>
+        <label><input type="checkbox" checked disabled /> Presentation Size</label>
+        <label><input type="checkbox" checked disabled /> What It Treats</label>
+        <span style="font-size:0.85rem; color:#666;">(Filters not yet active)</span>
     </div>
 
-    <!-- SEARCH BAR -->
-    <div class="search-bar">
-        <input type="text" id="searchInput" placeholder="Search by drug name, ID, ingredients…" />
-        <button id="searchBtn">Search</button>
-    </div>
+    <!-- Stats -->
+    <div id="searchStats" style="margin:0.5rem 0;"></div>
 
-    <!-- FILTER TOGGLE & OPTIONS -->
-    <div class="filter-section">
-        <button class="filter-toggle" id="filterToggle">☰ Filters</button>
-        <div class="filter-options" id="filterOptions">
-            <label><input type="checkbox" checked /> ID</label>
-            <label><input type="checkbox" checked /> Drug Name</label>
-            <label><input type="checkbox" checked /> Form</label>
-            <label><input type="checkbox" checked /> Presentation Size</label>
-            <label><input type="checkbox" checked /> What It Treats</label>
-        </div>
-    </div>
+    <!-- Results Container -->
+    <div id="resultsContainer"></div>
 
-    <!-- RESULTS PLACEHOLDER -->
-    <div class="results-placeholder">
-        <div>🔎 Enter a search term and press <strong>Search</strong></div>
-        <p>You can also filter which columns to search using the <strong>Filters</strong> button.</p>
-    </div>
-</div>
+    <script>
+        (function() {
+            // ---------- CONFIGURATION ----------
+            // Replace with your actual Apps Script web app URL
+            const API_URL = 'https://script.google.com/macros/s/AKfycbzzKAmnfCe9O7I56Tb8Fnye-2-GMvpGkyYR574E7uULX2wao9lK77Z9jn6WOiPCZzru/exec';
 
-<script>
-    (function() {
-        // ---------- DOM refs ----------
-        const searchBtn = document.getElementById('searchBtn');
-        const filterToggle = document.getElementById('filterToggle');
-        const filterOptions = document.getElementById('filterOptions');
+            // DOM refs
+            const searchForm = document.getElementById('searchForm');
+            const searchInput = document.getElementById('searchInput');
+            const searchBtn = document.getElementById('searchBtn');
+            const filterToggle = document.getElementById('filterToggle');
+            const filterOptions = document.getElementById('filterOptions');
+            const searchStats = document.getElementById('searchStats');
+            const resultsContainer = document.getElementById('resultsContainer');
 
-        // ---------- Toggle filter visibility ----------
-        filterToggle.addEventListener('click', function() {
-            filterOptions.classList.toggle('open');
-            // update button text (optional)
-            this.textContent = filterOptions.classList.contains('open') ? '✕ Close Filters' : '☰ Filters';
-        });
+            let allData = [];
+            let dataLoaded = false;
 
-        // ---------- Pulsating animation on search button ----------
-        searchBtn.addEventListener('click', function() {
-            // Start pulsing
-            this.classList.add('pulsing');
-            this.textContent = 'Searching…';
-
-            // Simulate a search delay (demo only)
-            setTimeout(() => {
-                this.classList.remove('pulsing');
-                this.textContent = 'Search';
-                // In the real version, you would perform the actual search here.
-                // For now, just log.
-                console.log('Search executed (simulated)');
-            }, 2000);
-        });
-
-        // Optional: remove pulsing if user clicks again? No, it's fine.
-
-        // ---------- (Demo) initial state ----------
-        // filter options hidden by default
-        filterOptions.classList.remove('open');
-        filterToggle.textContent = '☰ Filters';
-
-        // ---------- (Placeholder) search with Enter key ----------
-        document.getElementById('searchInput').addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                searchBtn.click();
+            // ---------- FETCH DATA (silent) ----------
+            async function fetchAllData() {
+                if (dataLoaded) return allData;
+                try {
+                    const response = await fetch(API_URL);
+                    const data = await response.json();
+                    // Expect data to be an array of arrays (8 columns)
+                    if (Array.isArray(data)) {
+                        allData = data;
+                        dataLoaded = true;
+                        return allData;
+                    } else {
+                        console.error('Unexpected data format:', data);
+                        return [];
+                    }
+                } catch (error) {
+                    console.error('Fetch error:', error);
+                    return [];
+                }
             }
-        });
-    })();
-</script>
+
+            // ---------- SEARCH (by drug name only) ----------
+            function searchData(query) {
+                if (!allData || allData.length === 0) return [];
+                if (!query || query.trim() === '') return allData;
+
+                const lowerQuery = query.toLowerCase().trim();
+                // Column 2 = Drug Name
+                return allData.filter(row => {
+                    const drugName = (row[2] || '').toString().toLowerCase();
+                    return drugName.includes(lowerQuery);
+                });
+            }
+
+            // ---------- RENDER RESULTS (plain HTML, no CSS) ----------
+            function renderResults(results, query) {
+                if (!results || results.length === 0) {
+                    resultsContainer.innerHTML = `<p>No results found for "<strong>${query || ''}</strong>"</p>`;
+                    searchStats.textContent = '0 results';
+                    return;
+                }
+
+                let html = '';
+                results.forEach(row => {
+                    // row: [ID, Drug Class, Drug, Active Ingredients, Presentation, Form, What It Treats, Balance]
+                    const id = row[0] || '';
+                    const drugClass = row[1] || '';
+                    const drug = row[2] || '';
+                    const ingredients = row[3] || '';
+                    const presentation = row[4] || '';
+                    const form = row[5] || '';
+                    const treats = row[6] || '';
+                    const balance = row[7] || 0;
+
+                    html += `<div style="border:1px solid #ccc; padding:0.5rem; margin:0.5rem 0;">`;
+                    html += `<h1 style="margin:0 0 0.2rem 0;">${drug || 'Unnamed Drug'}</h1>`;
+                    html += `<h2 style="margin:0 0 0.2rem 0; font-weight:normal;">${form || 'Form not specified'}</h2>`;
+                    if (ingredients) html += `<p><strong>Active Ingredients:</strong> ${ingredients}</p>`;
+                    if (presentation) html += `<p><strong>Presentation:</strong> ${presentation}</p>`;
+                    if (drugClass) html += `<p><strong>Class:</strong> ${drugClass}</p>`;
+                    if (treats) html += `<p><strong>Treats:</strong> ${treats}</p>`;
+                    html += `<p><strong>Balance:</strong> ${balance}</p>`;
+                    if (id) html += `<p style="font-size:0.85rem; color:#555;">ID: ${id}</p>`;
+                    html += `</div>`;
+                });
+
+                resultsContainer.innerHTML = html;
+                searchStats.textContent = `${results.length} result${results.length > 1 ? 's' : ''} found (${allData.length} total)`;
+            }
+
+            // ---------- HANDLE SEARCH ----------
+            async function handleSearch(e) {
+                e.preventDefault();
+
+                const query = searchInput.value.trim();
+                if (!query) {
+                    resultsContainer.innerHTML = `<p>Please enter a search term.</p>`;
+                    searchStats.textContent = '';
+                    return;
+                }
+
+                // Show loading state
+                searchBtn.textContent = 'Searching…';
+                searchBtn.disabled = true;
+
+                // Fetch data if not loaded
+                if (!dataLoaded) {
+                    resultsContainer.innerHTML = `<p>Loading data…</p>`;
+                    await fetchAllData();
+                }
+
+                const results = searchData(query);
+                renderResults(results, query);
+
+                // Restore button
+                searchBtn.textContent = 'Search';
+                searchBtn.disabled = false;
+            }
+
+            // ---------- TOGGLE FILTERS ----------
+            filterToggle.addEventListener('click', function() {
+                if (filterOptions.style.display === 'none') {
+                    filterOptions.style.display = 'block';
+                    this.textContent = '✕ Close Filters';
+                } else {
+                    filterOptions.style.display = 'none';
+                    this.textContent = '☰ Filters';
+                }
+            });
+
+            // ---------- EVENT LISTENERS ----------
+            searchForm.addEventListener('submit', handleSearch);
+
+            // Optional: if you want to show all on empty search, you can trigger a search on load with empty query
+            // but we'll leave it empty to show a placeholder message.
+            // We'll pre-load data in background anyway.
+            (function init() {
+                // Pre-fetch data silently
+                fetchAllData().then(() => {
+                    console.log('Data pre-loaded in background.');
+                    // Optionally show a message that data is ready
+                    searchStats.textContent = `Data ready (${allData.length} records). Enter a search term.`;
+                });
+            })();
+
+        })();
+    </script>
 
 </body>
 </html>
