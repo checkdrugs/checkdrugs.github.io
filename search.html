@@ -11,11 +11,11 @@
     <p><a href="index.html">← Logout</a></p>
 
     <!-- Search Bar -->
-    <form id="searchForm">
+    <div>
         <input type="text" id="searchInput" placeholder="Search…" size="40" />
-        <button type="submit" id="searchBtn">Search</button>
+        <button type="button" id="searchBtn">Search</button>
         <button type="button" id="filterToggle">☰ Filters</button>
-    </form>
+    </div>
 
     <!-- Floating Column Filter Panel -->
     <div id="filterPanel" style="display:none; position:fixed; top:10%; left:50%; transform:translateX(-50%); background:white; border:2px solid #ccc; padding:1.5rem; z-index:999; min-width:300px; box-shadow:0 4px 20px rgba(0,0,0,0.3);">
@@ -73,10 +73,10 @@
     <script>
         (function() {
             // ---------- CONFIG ----------
+            // Replace with your actual Apps Script web app URL
             const API_URL = 'https://script.google.com/macros/s/AKfycbzzKAmnfCe9O7I56Tb8Fnye-2-GMvpGkyYR574E7uULX2wao9lK77Z9jn6WOiPCZzru/exec';
 
             // ---------- DOM REFS ----------
-            const searchForm = document.getElementById('searchForm');
             const searchInput = document.getElementById('searchInput');
             const searchBtn = document.getElementById('searchBtn');
             const filterToggle = document.getElementById('filterToggle');
@@ -97,19 +97,22 @@
 
             let allData = [];
             let dataLoaded = false;
-            let currentResults = [];   // latest search results (before advanced filter)
-            let filteredResults = [];  // after advanced filter
+            let currentResults = [];
+            let filteredResults = [];
             let currentQuery = '';
 
             // ---------- FETCH DATA ----------
             async function fetchAllData() {
                 if (dataLoaded) return allData;
                 try {
+                    console.log('Fetching data from API...');
                     const response = await fetch(API_URL);
+                    if (!response.ok) throw new Error('HTTP error ' + response.status);
                     const data = await response.json();
                     if (Array.isArray(data)) {
                         allData = data;
                         dataLoaded = true;
+                        console.log('Data loaded: ' + allData.length + ' records');
                         return allData;
                     } else {
                         console.error('Unexpected data format:', data);
@@ -117,6 +120,7 @@
                     }
                 } catch (error) {
                     console.error('Fetch error:', error);
+                    searchStats.textContent = 'Error loading data. Check console.';
                     return [];
                 }
             }
@@ -132,7 +136,7 @@
                 return cols;
             }
 
-            // ---------- POPULATE FORM DROPDOWN (from a dataset) ----------
+            // ---------- POPULATE FORM DROPDOWN ----------
             function populateFormDropdown(data) {
                 const forms = new Set();
                 data.forEach(row => {
@@ -149,7 +153,7 @@
                 });
             }
 
-            // ---------- SEARCH (across selected columns) ----------
+            // ---------- SEARCH ----------
             function searchData(query, columns) {
                 if (!allData || allData.length === 0) return [];
                 if (!query || query.trim() === '') return allData;
@@ -169,7 +173,6 @@
             function applyAdvancedFilter(results) {
                 let filtered = results.slice();
 
-                // Balance filter
                 const balVal = balanceFilter.value;
                 if (balVal !== 'all') {
                     filtered = filtered.filter(row => {
@@ -181,7 +184,6 @@
                     });
                 }
 
-                // Form filter
                 const formVal = formFilter.value;
                 if (formVal !== 'all') {
                     filtered = filtered.filter(row => {
@@ -190,7 +192,6 @@
                     });
                 }
 
-                // Presentation filter (substring)
                 const presVal = presentationFilter.value.trim();
                 if (presVal) {
                     const lowerPres = presVal.toLowerCase();
@@ -205,6 +206,10 @@
 
             // ---------- RENDER RESULTS ----------
             function renderResults(results, query, isAdvanced = false) {
+                // Remove any existing advanced filter button
+                const oldAdvBtn = document.getElementById('advancedFilterBtn');
+                if (oldAdvBtn) oldAdvBtn.remove();
+
                 if (!results || results.length === 0) {
                     resultsContainer.innerHTML = `<p>No results found for "<strong>${query || ''}</strong>"</p>`;
                     if (isAdvanced) {
@@ -243,9 +248,8 @@
                     searchStats.textContent = `${results.length} results (filtered from ${currentResults.length})`;
                 } else {
                     searchStats.textContent = `${results.length} result${results.length > 1 ? 's' : ''} found (${allData.length} total)`;
-                    // Show Advanced Filter button if results > 0
-                    const advBtn = document.getElementById('advancedFilterBtn');
-                    if (!advBtn && results.length > 0) {
+                    // Add Advanced Filter button if results > 0
+                    if (results.length > 0) {
                         const btn = document.createElement('button');
                         btn.id = 'advancedFilterBtn';
                         btn.textContent = '⚙️ Advanced Filter';
@@ -253,31 +257,26 @@
                         btn.style.cursor = 'pointer';
                         searchStats.appendChild(btn);
                         btn.addEventListener('click', function() {
-                            // Populate form dropdown with current results
                             populateFormDropdown(currentResults);
-                            // Open advanced panel
                             openAdvancedPanel();
                         });
-                    } else if (advBtn && results.length === 0) {
-                        advBtn.remove();
                     }
                 }
             }
 
             // ---------- HANDLE SEARCH ----------
-            async function handleSearch(e) {
-                e.preventDefault();
+            async function performSearch() {
                 const query = searchInput.value.trim();
                 currentQuery = query;
                 if (!query) {
                     resultsContainer.innerHTML = `<p>Please enter a search term.</p>`;
                     searchStats.textContent = '';
-                    // remove advanced button if exists
                     const advBtn = document.getElementById('advancedFilterBtn');
                     if (advBtn) advBtn.remove();
                     return;
                 }
 
+                // Button feedback
                 searchBtn.textContent = 'Searching…';
                 searchBtn.disabled = true;
 
@@ -288,7 +287,7 @@
 
                 const cols = getSelectedColumns();
                 const results = searchData(query, cols);
-                currentResults = results; // store for advanced filtering
+                currentResults = results;
                 renderResults(results, query, false);
 
                 searchBtn.textContent = 'Search';
@@ -329,7 +328,7 @@
             // ---------- TOGGLE ADVANCED FILTER PANEL ----------
             function openAdvancedPanel() {
                 advancedPanel.style.display = 'block';
-                // also ensure column panel is closed (optional)
+                // Optionally close column panel
                 closeFilterPanel();
             }
 
@@ -345,13 +344,11 @@
             // Click outside to close panels
             document.addEventListener('click', function(e) {
                 const target = e.target;
-                // Close column panel if click outside
                 if (filterPanel.style.display !== 'none') {
                     if (!filterPanel.contains(target) && target !== filterToggle && !filterToggle.contains(target)) {
                         closeFilterPanel();
                     }
                 }
-                // Close advanced panel if click outside
                 if (advancedPanel.style.display !== 'none') {
                     if (!advancedPanel.contains(target) && target.id !== 'advancedFilterBtn') {
                         closeAdvancedPanel();
@@ -385,17 +382,25 @@
             });
 
             resetAdvFilter.addEventListener('click', function() {
-                // Reset advanced filter controls
                 balanceFilter.value = 'all';
                 formFilter.value = 'all';
                 presentationFilter.value = '';
-                // Re-render original search results
                 if (currentResults.length > 0) {
-                    renderResults(currentResults, currentQuery, true); // show as advanced (but with no filter)
-                } else {
-                    // If no current results, maybe do nothing
+                    renderResults(currentResults, currentQuery, true);
                 }
                 closeAdvancedPanel();
+            });
+
+            // ---------- EVENT LISTENERS ----------
+            // Search button click
+            searchBtn.addEventListener('click', performSearch);
+
+            // Enter key on input
+            searchInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault(); // prevent any form submission
+                    performSearch();
+                }
             });
 
             // ---------- PRE-LOAD DATA ----------
