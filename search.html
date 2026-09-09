@@ -12,52 +12,59 @@
 
     <!-- Search Bar -->
     <form id="searchForm">
-        <input type="text" id="searchInput" placeholder="Search by drug name…" size="40" />
+        <input type="text" id="searchInput" placeholder="Search…" size="40" />
         <button type="submit" id="searchBtn">Search</button>
         <button type="button" id="filterToggle">☰ Filters</button>
     </form>
 
-    <!-- Filter Options (hidden by default) -->
-    <div id="filterOptions" style="display:none; margin-top:0.5rem;">
-        <label><input type="checkbox" checked disabled /> ID</label>
-        <label><input type="checkbox" checked disabled /> Drug Name</label>
-        <label><input type="checkbox" checked disabled /> Form</label>
-        <label><input type="checkbox" checked disabled /> Presentation Size</label>
-        <label><input type="checkbox" checked disabled /> What It Treats</label>
-        <span style="font-size:0.85rem; color:#666;">(Filters not yet active)</span>
+    <!-- Floating Filter Panel -->
+    <div id="filterPanel" style="display:none; position:fixed; top:10%; left:50%; transform:translateX(-50%); background:white; border:2px solid #ccc; padding:1.5rem; z-index:999; min-width:300px; box-shadow:0 4px 20px rgba(0,0,0,0.3);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+            <strong>Filters</strong>
+            <button type="button" id="closeFilterBtn" style="background:red; color:white; border:none; padding:0.2rem 0.8rem; font-weight:bold; cursor:pointer;">X</button>
+        </div>
+        <div style="margin-bottom:0.8rem;">
+            <label><input type="checkbox" id="selectAll" checked /> Select All</label>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:0.5rem;">
+            <label><input type="checkbox" class="filter-checkbox" checked data-col="0" /> ID</label>
+            <label><input type="checkbox" class="filter-checkbox" checked data-col="2" /> Drug Name</label>
+            <label><input type="checkbox" class="filter-checkbox" checked data-col="5" /> Form</label>
+            <label><input type="checkbox" class="filter-checkbox" checked data-col="4" /> Presentation Size</label>
+            <label><input type="checkbox" class="filter-checkbox" checked data-col="6" /> What It Treats</label>
+        </div>
     </div>
 
-    <!-- Stats -->
+    <!-- Stats & Results -->
     <div id="searchStats" style="margin:0.5rem 0;"></div>
-
-    <!-- Results Container -->
     <div id="resultsContainer"></div>
 
     <script>
         (function() {
-            // ---------- CONFIGURATION ----------
-            // Replace with your actual Apps Script web app URL
+            // ---------- CONFIG ----------
             const API_URL = 'https://script.google.com/macros/s/AKfycbzzKAmnfCe9O7I56Tb8Fnye-2-GMvpGkyYR574E7uULX2wao9lK77Z9jn6WOiPCZzru/exec';
 
-            // DOM refs
+            // ---------- DOM REFS ----------
             const searchForm = document.getElementById('searchForm');
             const searchInput = document.getElementById('searchInput');
             const searchBtn = document.getElementById('searchBtn');
             const filterToggle = document.getElementById('filterToggle');
-            const filterOptions = document.getElementById('filterOptions');
+            const filterPanel = document.getElementById('filterPanel');
+            const closeFilterBtn = document.getElementById('closeFilterBtn');
+            const selectAll = document.getElementById('selectAll');
+            const filterCheckboxes = document.querySelectorAll('.filter-checkbox');
             const searchStats = document.getElementById('searchStats');
             const resultsContainer = document.getElementById('resultsContainer');
 
             let allData = [];
             let dataLoaded = false;
 
-            // ---------- FETCH DATA (silent) ----------
+            // ---------- FETCH DATA ----------
             async function fetchAllData() {
                 if (dataLoaded) return allData;
                 try {
                     const response = await fetch(API_URL);
                     const data = await response.json();
-                    // Expect data to be an array of arrays (8 columns)
                     if (Array.isArray(data)) {
                         allData = data;
                         dataLoaded = true;
@@ -72,20 +79,34 @@
                 }
             }
 
-            // ---------- SEARCH (by drug name only) ----------
-            function searchData(query) {
+            // ---------- GET SELECTED COLUMNS ----------
+            function getSelectedColumns() {
+                const cols = [];
+                filterCheckboxes.forEach(cb => {
+                    if (cb.checked) {
+                        cols.push(parseInt(cb.getAttribute('data-col'), 10));
+                    }
+                });
+                return cols;
+            }
+
+            // ---------- SEARCH (across selected columns) ----------
+            function searchData(query, columns) {
                 if (!allData || allData.length === 0) return [];
                 if (!query || query.trim() === '') return allData;
-
                 const lowerQuery = query.toLowerCase().trim();
-                // Column 2 = Drug Name
                 return allData.filter(row => {
-                    const drugName = (row[2] || '').toString().toLowerCase();
-                    return drugName.includes(lowerQuery);
+                    for (let col of columns) {
+                        const value = (row[col] || '').toString().toLowerCase();
+                        if (value.includes(lowerQuery)) {
+                            return true;
+                        }
+                    }
+                    return false;
                 });
             }
 
-            // ---------- RENDER RESULTS (plain HTML, no CSS) ----------
+            // ---------- RENDER RESULTS ----------
             function renderResults(results, query) {
                 if (!results || results.length === 0) {
                     resultsContainer.innerHTML = `<p>No results found for "<strong>${query || ''}</strong>"</p>`;
@@ -95,7 +116,6 @@
 
                 let html = '';
                 results.forEach(row => {
-                    // row: [ID, Drug Class, Drug, Active Ingredients, Presentation, Form, What It Treats, Balance]
                     const id = row[0] || '';
                     const drugClass = row[1] || '';
                     const drug = row[2] || '';
@@ -124,7 +144,6 @@
             // ---------- HANDLE SEARCH ----------
             async function handleSearch(e) {
                 e.preventDefault();
-
                 const query = searchInput.value.trim();
                 if (!query) {
                     resultsContainer.innerHTML = `<p>Please enter a search term.</p>`;
@@ -132,46 +151,70 @@
                     return;
                 }
 
-                // Show loading state
                 searchBtn.textContent = 'Searching…';
                 searchBtn.disabled = true;
 
-                // Fetch data if not loaded
                 if (!dataLoaded) {
                     resultsContainer.innerHTML = `<p>Loading data…</p>`;
                     await fetchAllData();
                 }
 
-                const results = searchData(query);
+                const cols = getSelectedColumns();
+                const results = searchData(query, cols);
                 renderResults(results, query);
 
-                // Restore button
                 searchBtn.textContent = 'Search';
                 searchBtn.disabled = false;
             }
 
-            // ---------- TOGGLE FILTERS ----------
+            // ---------- TOGGLE FILTER PANEL ----------
+            function openFilterPanel() {
+                filterPanel.style.display = 'block';
+                filterToggle.textContent = '✕ Filters';
+                filterToggle.style.backgroundColor = 'red';
+                filterToggle.style.color = 'white';
+                filterToggle.style.border = 'none';
+            }
+
+            function closeFilterPanel() {
+                filterPanel.style.display = 'none';
+                filterToggle.textContent = '☰ Filters';
+                filterToggle.style.backgroundColor = '';
+                filterToggle.style.color = '';
+                filterToggle.style.border = '';
+            }
+
             filterToggle.addEventListener('click', function() {
-                if (filterOptions.style.display === 'none') {
-                    filterOptions.style.display = 'block';
-                    this.textContent = '✕ Close Filters';
+                if (filterPanel.style.display === 'none') {
+                    openFilterPanel();
                 } else {
-                    filterOptions.style.display = 'none';
-                    this.textContent = '☰ Filters';
+                    closeFilterPanel();
                 }
+            });
+
+            closeFilterBtn.addEventListener('click', closeFilterPanel);
+
+            // ---------- SELECT ALL ----------
+            selectAll.addEventListener('change', function() {
+                const checked = this.checked;
+                filterCheckboxes.forEach(cb => cb.checked = checked);
+            });
+
+            // When individual checkboxes change, update "Select All" state
+            filterCheckboxes.forEach(cb => {
+                cb.addEventListener('change', function() {
+                    const allChecked = Array.from(filterCheckboxes).every(c => c.checked);
+                    selectAll.checked = allChecked;
+                });
             });
 
             // ---------- EVENT LISTENERS ----------
             searchForm.addEventListener('submit', handleSearch);
 
-            // Optional: if you want to show all on empty search, you can trigger a search on load with empty query
-            // but we'll leave it empty to show a placeholder message.
-            // We'll pre-load data in background anyway.
+            // Pre-load data in background
             (function init() {
-                // Pre-fetch data silently
                 fetchAllData().then(() => {
-                    console.log('Data pre-loaded in background.');
-                    // Optionally show a message that data is ready
+                    console.log('Data pre-loaded.');
                     searchStats.textContent = `Data ready (${allData.length} records). Enter a search term.`;
                 });
             })();
