@@ -73,7 +73,6 @@
     <script>
         (function() {
             // ---------- CONFIG ----------
-            // Replace with your actual Apps Script web app URL
             const API_URL = 'https://script.google.com/macros/s/AKfycbzzKAmnfCe9O7I56Tb8Fnye-2-GMvpGkyYR574E7uULX2wao9lK77Z9jn6WOiPCZzru/exec';
 
             // ---------- DOM REFS ----------
@@ -97,9 +96,11 @@
 
             let allData = [];
             let dataLoaded = false;
-            let currentResults = [];
-            let filteredResults = [];
+            let currentResults = [];        // original search results (base)
+            let filteredResults = [];       // results after advanced filtering
             let currentQuery = '';
+            let advancedActive = false;     // true when advanced filters are applied
+            let advFilterState = { balance: 'all', form: 'all', presentation: '' }; // for reset
 
             // ---------- FETCH DATA ----------
             async function fetchAllData() {
@@ -205,10 +206,12 @@
             }
 
             // ---------- RENDER RESULTS ----------
-            function renderResults(results, query, isAdvanced = false) {
-                // Remove any existing advanced filter button
+            function renderResults(results, query, isAdvanced = false, showClear = false) {
+                // Remove any existing advanced filter and clear buttons
                 const oldAdvBtn = document.getElementById('advancedFilterBtn');
                 if (oldAdvBtn) oldAdvBtn.remove();
+                const oldClearBtn = document.getElementById('clearAdvBtn');
+                if (oldClearBtn) oldClearBtn.remove();
 
                 if (!results || results.length === 0) {
                     resultsContainer.innerHTML = `<p>No results found for "<strong>${query || ''}</strong>"</p>`;
@@ -244,23 +247,50 @@
                 });
 
                 resultsContainer.innerHTML = html;
+
+                // Build stats line with buttons
+                let statsText = '';
                 if (isAdvanced) {
-                    searchStats.textContent = `${results.length} results (filtered from ${currentResults.length})`;
+                    statsText = `${results.length} results (filtered from ${currentResults.length})`;
                 } else {
-                    searchStats.textContent = `${results.length} result${results.length > 1 ? 's' : ''} found (${allData.length} total)`;
-                    // Add Advanced Filter button if results > 0
-                    if (results.length > 0) {
-                        const btn = document.createElement('button');
-                        btn.id = 'advancedFilterBtn';
-                        btn.textContent = '⚙️ Advanced Filter';
-                        btn.style.marginLeft = '1rem';
-                        btn.style.cursor = 'pointer';
-                        searchStats.appendChild(btn);
-                        btn.addEventListener('click', function() {
-                            populateFormDropdown(currentResults);
-                            openAdvancedPanel();
+                    statsText = `${results.length} result${results.length > 1 ? 's' : ''} found (${allData.length} total)`;
+                }
+
+                // Always show Advanced Filter button if results > 0
+                if (results.length > 0) {
+                    const advBtn = document.createElement('button');
+                    advBtn.id = 'advancedFilterBtn';
+                    advBtn.textContent = '⚙️ Advanced Filter';
+                    advBtn.style.marginLeft = '1rem';
+                    advBtn.style.cursor = 'pointer';
+                    searchStats.textContent = statsText;
+                    searchStats.appendChild(advBtn);
+                    advBtn.addEventListener('click', function() {
+                        populateFormDropdown(currentResults);
+                        openAdvancedPanel();
+                    });
+
+                    // Show Clear button if advanced filters are active
+                    if (showClear) {
+                        const clearBtn = document.createElement('button');
+                        clearBtn.id = 'clearAdvBtn';
+                        clearBtn.textContent = '✕ Clear';
+                        clearBtn.style.marginLeft = '0.5rem';
+                        clearBtn.style.cursor = 'pointer';
+                        clearBtn.style.backgroundColor = '#f0f0f0';
+                        searchStats.appendChild(clearBtn);
+                        clearBtn.addEventListener('click', function() {
+                            // Reset advanced filters to defaults
+                            balanceFilter.value = 'all';
+                            formFilter.value = 'all';
+                            presentationFilter.value = '';
+                            advancedActive = false;
+                            // Show original results
+                            renderResults(currentResults, currentQuery, false, false);
                         });
                     }
+                } else {
+                    searchStats.textContent = statsText;
                 }
             }
 
@@ -273,10 +303,12 @@
                     searchStats.textContent = '';
                     const advBtn = document.getElementById('advancedFilterBtn');
                     if (advBtn) advBtn.remove();
+                    const clearBtn = document.getElementById('clearAdvBtn');
+                    if (clearBtn) clearBtn.remove();
+                    advancedActive = false;
                     return;
                 }
 
-                // Button feedback
                 searchBtn.textContent = 'Searching…';
                 searchBtn.disabled = true;
 
@@ -288,7 +320,8 @@
                 const cols = getSelectedColumns();
                 const results = searchData(query, cols);
                 currentResults = results;
-                renderResults(results, query, false);
+                advancedActive = false;
+                renderResults(results, query, false, false);
 
                 searchBtn.textContent = 'Search';
                 searchBtn.disabled = false;
@@ -377,28 +410,36 @@
                 }
                 const filtered = applyAdvancedFilter(currentResults);
                 filteredResults = filtered;
-                renderResults(filtered, currentQuery, true);
+                advancedActive = true;
+                renderResults(filtered, currentQuery, true, true);
                 closeAdvancedPanel();
             });
 
             resetAdvFilter.addEventListener('click', function() {
+                // Reset controls inside the panel
                 balanceFilter.value = 'all';
                 formFilter.value = 'all';
                 presentationFilter.value = '';
+                // Do not change displayed results automatically — user must click Apply again.
+                // Optionally, we could reset the displayed results, but we'll keep it consistent with "Apply".
+                // However, if we want to reset the view, we can re-render original.
+                // For clarity, we'll just reset controls and leave the current view.
+                // But the user expects that resetting controls without applying should not affect the view.
+                // So we only reset the controls.
+                // To be more intuitive, we could also reset the view, but we'll let the user decide.
+                // Let's reset the view to the original search results as well.
                 if (currentResults.length > 0) {
-                    renderResults(currentResults, currentQuery, true);
+                    advancedActive = false;
+                    renderResults(currentResults, currentQuery, false, false);
                 }
                 closeAdvancedPanel();
             });
 
             // ---------- EVENT LISTENERS ----------
-            // Search button click
             searchBtn.addEventListener('click', performSearch);
-
-            // Enter key on input
             searchInput.addEventListener('keydown', function(e) {
                 if (e.key === 'Enter') {
-                    e.preventDefault(); // prevent any form submission
+                    e.preventDefault();
                     performSearch();
                 }
             });
