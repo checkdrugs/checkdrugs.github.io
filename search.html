@@ -40,7 +40,7 @@
     <div id="resultsContainer"></div>
 
     <!-- Floating Advanced Filter Panel -->
-    <div id="advancedPanel" style="display:none; position:fixed; top:15%; left:50%; transform:translateX(-50%); background:white; border:2px solid #ccc; padding:1.5rem; z-index:999; min-width:320px; box-shadow:0 4px 20px rgba(0,0,0,0.3);">
+    <div id="advancedPanel" style="display:none; position:fixed; top:15%; left:50%; transform:translateX(-50%); background:white; border:2px solid #ccc; padding:1.5rem; z-index:999; min-width:340px; box-shadow:0 4px 20px rgba(0,0,0,0.3);">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
             <strong>Advanced Filter</strong>
             <button type="button" id="closeAdvBtn" style="background:red; color:white; border:none; padding:0.2rem 0.8rem; font-weight:bold; cursor:pointer;">X</button>
@@ -61,8 +61,18 @@
             </select>
         </div>
         <div style="margin-bottom:0.8rem;">
-            <label><strong>Presentation Size (contains)</strong></label><br />
-            <input type="text" id="presentationFilter" placeholder="e.g. 100 ml" style="width:100%; padding:0.3rem;" />
+            <label><strong>Presentation Size</strong></label><br />
+            <div style="display:flex; gap:0.5rem;">
+                <input type="text" id="presNumber" placeholder="e.g. 100" style="flex:1; padding:0.3rem;" />
+                <select id="presUnit" style="padding:0.3rem;">
+                    <option value="">Any</option>
+                    <option value="ml">ml</option>
+                    <option value="l">L</option>
+                    <option value="mg">mg</option>
+                    <option value="g">g</option>
+                </select>
+            </div>
+            <div style="font-size:0.8rem; color:#555; margin-top:0.2rem;">Enter a number and select a unit (e.g. "100 ml")</div>
         </div>
         <div style="display:flex; gap:0.5rem;">
             <button type="button" id="applyAdvFilter" style="background:#1e293b; color:white; border:none; padding:0.4rem 1.5rem; cursor:pointer;">Apply</button>
@@ -90,33 +100,32 @@
             const closeAdvBtn = document.getElementById('closeAdvBtn');
             const balanceFilter = document.getElementById('balanceFilter');
             const formFilter = document.getElementById('formFilter');
-            const presentationFilter = document.getElementById('presentationFilter');
+            const presNumber = document.getElementById('presNumber');
+            const presUnit = document.getElementById('presUnit');
             const applyAdvFilter = document.getElementById('applyAdvFilter');
             const resetAdvFilter = document.getElementById('resetAdvFilter');
 
             let allData = [];
             let dataLoaded = false;
-            let currentResults = [];        // original search results (base)
-            let filteredResults = [];       // results after advanced filtering
+            let currentResults = [];
             let currentQuery = '';
-            let advancedActive = false;     // true when advanced filters are applied
-            let advFilterState = { balance: 'all', form: 'all', presentation: '' }; // for reset
+            let advancedActive = false;
 
             // ---------- FETCH DATA ----------
             async function fetchAllData() {
                 if (dataLoaded) return allData;
                 try {
-                    console.log('Fetching data from API...');
+                    console.log('Fetching data...');
                     const response = await fetch(API_URL);
                     if (!response.ok) throw new Error('HTTP error ' + response.status);
                     const data = await response.json();
                     if (Array.isArray(data)) {
                         allData = data;
                         dataLoaded = true;
-                        console.log('Data loaded: ' + allData.length + ' records');
+                        console.log('Data loaded: ' + allData.length);
                         return allData;
                     } else {
-                        console.error('Unexpected data format:', data);
+                        console.error('Unexpected format:', data);
                         return [];
                     }
                 } catch (error) {
@@ -174,6 +183,7 @@
             function applyAdvancedFilter(results) {
                 let filtered = results.slice();
 
+                // Balance
                 const balVal = balanceFilter.value;
                 if (balVal !== 'all') {
                     filtered = filtered.filter(row => {
@@ -185,6 +195,7 @@
                     });
                 }
 
+                // Form
                 const formVal = formFilter.value;
                 if (formVal !== 'all') {
                     filtered = filtered.filter(row => {
@@ -193,12 +204,26 @@
                     });
                 }
 
-                const presVal = presentationFilter.value.trim();
-                if (presVal) {
-                    const lowerPres = presVal.toLowerCase();
+                // Presentation: number + unit
+                const numVal = presNumber.value.trim();
+                const unitVal = presUnit.value;
+                if (numVal) {
+                    const lowerNum = numVal.toLowerCase();
                     filtered = filtered.filter(row => {
                         const pres = row[4] ? row[4].toString().toLowerCase() : '';
-                        return pres.includes(lowerPres);
+                        // If unit is selected, require both number and unit
+                        if (unitVal) {
+                            return pres.includes(lowerNum) && pres.includes(unitVal.toLowerCase());
+                        } else {
+                            return pres.includes(lowerNum);
+                        }
+                    });
+                } else if (unitVal) {
+                    // If only unit is selected (no number), just filter by unit
+                    const lowerUnit = unitVal.toLowerCase();
+                    filtered = filtered.filter(row => {
+                        const pres = row[4] ? row[4].toString().toLowerCase() : '';
+                        return pres.includes(lowerUnit);
                     });
                 }
 
@@ -207,57 +232,51 @@
 
             // ---------- RENDER RESULTS ----------
             function renderResults(results, query, isAdvanced = false, showClear = false) {
-                // Remove any existing advanced filter and clear buttons
+                // Remove existing buttons
                 const oldAdvBtn = document.getElementById('advancedFilterBtn');
                 if (oldAdvBtn) oldAdvBtn.remove();
                 const oldClearBtn = document.getElementById('clearAdvBtn');
                 if (oldClearBtn) oldClearBtn.remove();
 
+                // Display results
                 if (!results || results.length === 0) {
                     resultsContainer.innerHTML = `<p>No results found for "<strong>${query || ''}</strong>"</p>`;
-                    if (isAdvanced) {
-                        searchStats.textContent = `${results.length} results (filtered from ${currentResults.length})`;
-                    } else {
-                        searchStats.textContent = '0 results';
-                    }
-                    return;
+                } else {
+                    let html = '';
+                    results.forEach(row => {
+                        const id = row[0] || '';
+                        const drugClass = row[1] || '';
+                        const drug = row[2] || '';
+                        const ingredients = row[3] || '';
+                        const presentation = row[4] || '';
+                        const form = row[5] || '';
+                        const treats = row[6] || '';
+                        const balance = row[7] || 0;
+
+                        html += `<div style="border:1px solid #ccc; padding:0.5rem; margin:0.5rem 0;">`;
+                        html += `<h1 style="margin:0 0 0.2rem 0;">${drug || 'Unnamed Drug'}</h1>`;
+                        html += `<h2 style="margin:0 0 0.2rem 0; font-weight:normal;">${form || 'Form not specified'}</h2>`;
+                        if (ingredients) html += `<p><strong>Active Ingredients:</strong> ${ingredients}</p>`;
+                        if (presentation) html += `<p><strong>Presentation:</strong> ${presentation}</p>`;
+                        if (drugClass) html += `<p><strong>Class:</strong> ${drugClass}</p>`;
+                        if (treats) html += `<p><strong>Treats:</strong> ${treats}</p>`;
+                        html += `<p><strong>Balance:</strong> ${balance}</p>`;
+                        if (id) html += `<p style="font-size:0.85rem; color:#555;">ID: ${id}</p>`;
+                        html += `</div>`;
+                    });
+                    resultsContainer.innerHTML = html;
                 }
 
-                let html = '';
-                results.forEach(row => {
-                    const id = row[0] || '';
-                    const drugClass = row[1] || '';
-                    const drug = row[2] || '';
-                    const ingredients = row[3] || '';
-                    const presentation = row[4] || '';
-                    const form = row[5] || '';
-                    const treats = row[6] || '';
-                    const balance = row[7] || 0;
-
-                    html += `<div style="border:1px solid #ccc; padding:0.5rem; margin:0.5rem 0;">`;
-                    html += `<h1 style="margin:0 0 0.2rem 0;">${drug || 'Unnamed Drug'}</h1>`;
-                    html += `<h2 style="margin:0 0 0.2rem 0; font-weight:normal;">${form || 'Form not specified'}</h2>`;
-                    if (ingredients) html += `<p><strong>Active Ingredients:</strong> ${ingredients}</p>`;
-                    if (presentation) html += `<p><strong>Presentation:</strong> ${presentation}</p>`;
-                    if (drugClass) html += `<p><strong>Class:</strong> ${drugClass}</p>`;
-                    if (treats) html += `<p><strong>Treats:</strong> ${treats}</p>`;
-                    html += `<p><strong>Balance:</strong> ${balance}</p>`;
-                    if (id) html += `<p style="font-size:0.85rem; color:#555;">ID: ${id}</p>`;
-                    html += `</div>`;
-                });
-
-                resultsContainer.innerHTML = html;
-
-                // Build stats line with buttons
+                // Build stats + buttons
                 let statsText = '';
                 if (isAdvanced) {
                     statsText = `${results.length} results (filtered from ${currentResults.length})`;
                 } else {
-                    statsText = `${results.length} result${results.length > 1 ? 's' : ''} found (${allData.length} total)`;
+                    statsText = `${results.length} result${results.length !== 1 ? 's' : ''} found (${allData.length} total)`;
                 }
 
-                // Always show Advanced Filter button if results > 0
-                if (results.length > 0) {
+                // Always show Advanced Filter button if we have a base result set (currentResults) and query is not empty
+                if (currentResults && currentResults.length > 0 && query && query.trim() !== '') {
                     const advBtn = document.createElement('button');
                     advBtn.id = 'advancedFilterBtn';
                     advBtn.textContent = '⚙️ Advanced Filter';
@@ -270,8 +289,8 @@
                         openAdvancedPanel();
                     });
 
-                    // Show Clear button if advanced filters are active
-                    if (showClear) {
+                    // Show Clear button if advanced is active
+                    if (showClear || advancedActive) {
                         const clearBtn = document.createElement('button');
                         clearBtn.id = 'clearAdvBtn';
                         clearBtn.textContent = '✕ Clear';
@@ -280,10 +299,11 @@
                         clearBtn.style.backgroundColor = '#f0f0f0';
                         searchStats.appendChild(clearBtn);
                         clearBtn.addEventListener('click', function() {
-                            // Reset advanced filters to defaults
+                            // Reset advanced controls
                             balanceFilter.value = 'all';
                             formFilter.value = 'all';
-                            presentationFilter.value = '';
+                            presNumber.value = '';
+                            presUnit.value = '';
                             advancedActive = false;
                             // Show original results
                             renderResults(currentResults, currentQuery, false, false);
@@ -301,11 +321,13 @@
                 if (!query) {
                     resultsContainer.innerHTML = `<p>Please enter a search term.</p>`;
                     searchStats.textContent = '';
+                    // remove buttons
                     const advBtn = document.getElementById('advancedFilterBtn');
                     if (advBtn) advBtn.remove();
                     const clearBtn = document.getElementById('clearAdvBtn');
                     if (clearBtn) clearBtn.remove();
                     advancedActive = false;
+                    currentResults = [];
                     return;
                 }
 
@@ -361,7 +383,6 @@
             // ---------- TOGGLE ADVANCED FILTER PANEL ----------
             function openAdvancedPanel() {
                 advancedPanel.style.display = 'block';
-                // Optionally close column panel
                 closeFilterPanel();
             }
 
@@ -374,7 +395,6 @@
                 closeAdvancedPanel();
             });
 
-            // Click outside to close panels
             document.addEventListener('click', function(e) {
                 const target = e.target;
                 if (filterPanel.style.display !== 'none') {
@@ -409,7 +429,6 @@
                     return;
                 }
                 const filtered = applyAdvancedFilter(currentResults);
-                filteredResults = filtered;
                 advancedActive = true;
                 renderResults(filtered, currentQuery, true, true);
                 closeAdvancedPanel();
@@ -419,15 +438,9 @@
                 // Reset controls inside the panel
                 balanceFilter.value = 'all';
                 formFilter.value = 'all';
-                presentationFilter.value = '';
-                // Do not change displayed results automatically — user must click Apply again.
-                // Optionally, we could reset the displayed results, but we'll keep it consistent with "Apply".
-                // However, if we want to reset the view, we can re-render original.
-                // For clarity, we'll just reset controls and leave the current view.
-                // But the user expects that resetting controls without applying should not affect the view.
-                // So we only reset the controls.
-                // To be more intuitive, we could also reset the view, but we'll let the user decide.
-                // Let's reset the view to the original search results as well.
+                presNumber.value = '';
+                presUnit.value = '';
+                // Also reset the view to original search results
                 if (currentResults.length > 0) {
                     advancedActive = false;
                     renderResults(currentResults, currentQuery, false, false);
