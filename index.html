@@ -3,173 +3,143 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Login · Sync Master</title>
+    <title>Jericho Pharm · Login</title>
 </head>
 <body>
 
-    <!-- ===== LOGIN FORM ===== -->
-    <div id="loginView">
-        <h1>⏺ Sync Master</h1>
-        <p>Login to continue</p>
-
-        <form id="loginForm">
-            <div>
-                <label for="loginUsername">Username</label>
-                <input type="text" id="loginUsername" placeholder="Enter username" />
-            </div>
-            <div>
-                <label for="loginPassword">Password</label>
-                <input type="password" id="loginPassword" placeholder="Enter password" />
-            </div>
-            <div id="loginError" style="color:red;"></div>
-            <div id="loginStatus" style="color:#4CAF50; min-height: 20px;"></div>
-            <button type="submit" id="loginBtn">Login</button>
-            <button type="button" id="showSignupBtn">Create Account</button>
-        </form>
+    <!-- ============================================================ -->
+    <!-- WELCOME VIEW                                                  -->
+    <!-- ============================================================ -->
+    <div id="welcomeView">
+        <h1>Welcome to Jericho Pharm</h1>
+        <p>
+            <button type="button" id="showLoginBtn">Login</button>
+            <button type="button" id="showSignupBtn">Sign Up</button>
+        </p>
+        <hr />
+        <p><small>ver 2.0</small></p>
     </div>
 
-    <!-- ===== SIGNUP FORM ===== -->
+    <!-- ============================================================ -->
+    <!-- LOGIN VIEW                                                    -->
+    <!-- ============================================================ -->
+    <div id="loginView" style="display:none;">
+        <h1>Login</h1>
+
+        <div>
+            <label for="loginUsername">Username</label><br />
+            <input type="text" id="loginUsername" size="30" autocomplete="username" />
+        </div>
+
+        <div>
+            <label for="loginPassword">Password</label><br />
+            <input type="password" id="loginPassword" size="30" autocomplete="current-password" />
+        </div>
+
+        <p>
+            <button type="button" id="loginBtn">Login</button>
+            <button type="button" id="backFromLogin">← Back</button>
+        </p>
+
+        <div id="loginMessage"></div>
+
+        <hr />
+        <p><small>ver 2.0</small></p>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- SIGNUP VIEW                                                   -->
+    <!-- ============================================================ -->
     <div id="signupView" style="display:none;">
-        <h1>⏺ Create Account <span style="font-size:0.6em;color:#999;">ver 1.9</span></h1>
-        <p>Fill in your details to sign up</p>
+        <h1>Create Account</h1>
 
-        <form id="signupForm">
-            <div>
-                <label for="surname">Surname</label>
-                <input type="text" id="surname" required />
-            </div>
-            <div>
-                <label for="firstName">First Name</label>
-                <input type="text" id="firstName" required />
-            </div>
-            <div>
-                <label for="otherNames">Other Names (comma separated)</label>
-                <input type="text" id="otherNames" placeholder="e.g., John, Mark, Peter" />
-            </div>
-            <div>
-                <label for="signupUsername">Username</label>
-                <div style="display:flex;gap:5px;align-items:center;max-width:400px;">
-                    <input type="text" id="signupUsername" required style="flex:1;" />
-                    <button type="button" id="checkUsernameBtn">Check</button>
-                </div>
-                <span id="usernameStatus"></span>
-            </div>
-            <div>
-                <label for="email">Email</label>
-                <div style="display:flex;gap:5px;align-items:center;max-width:400px;">
-                    <input type="email" id="email" required style="flex:1;" />
-                    <button type="button" id="checkEmailBtn">Check</button>
-                </div>
-                <span id="emailStatus"></span>
-            </div>
-            <div>
-                <label for="phone">Phone Number</label>
-                <div style="display:flex;gap:5px;align-items:center;max-width:400px;">
-                    <input type="tel" id="phone" placeholder="e.g., 0704556585 or +254704556585" required style="flex:1;" />
-                    <button type="button" id="checkPhoneBtn">Check</button>
-                </div>
-                <span id="phoneStatus"></span>
-            </div>
-            <div>
-                <label>Alternative Phone Number (optional)</label>
-                <button type="button" id="addAltPhoneBtn">+ Add Alternative Phone</button>
-                <div id="altPhoneContainer"></div>
-            </div>
-            <div>
-                <label for="password">Password</label>
-                <input type="password" id="password" required />
-            </div>
-            <div>
-                <label for="confirmPassword">Confirm Password</label>
-                <input type="password" id="confirmPassword" required />
-                <span id="passwordMatchStatus"></span>
-            </div>
-            <div id="signupError" style="color:red;"></div>
-            <div id="signupStatus" style="color:#4CAF50; min-height: 20px;"></div>
-            <div>
-                <button type="submit" id="signupSubmitBtn">Sign Up</button>
-                <button type="button" id="cancelSignupBtn">Cancel</button>
-            </div>
-        </form>
+        <div>
+            <label for="surname">Surname</label><br />
+            <input type="text" id="surname" size="30" />
+        </div>
+
+        <div>
+            <label for="firstName">First Name</label><br />
+            <input type="text" id="firstName" size="30" />
+        </div>
+
+        <div>
+            <label for="otherNames">Other Names (comma separated)</label><br />
+            <input type="text" id="otherNames" size="30" placeholder="e.g., John, Mark" />
+        </div>
+
+        <div>
+            <label for="signupUsername">Username</label><br />
+            <input type="text" id="signupUsername" size="30" />
+            <button type="button" id="checkUsernameBtn">Check</button>
+            <span id="usernameStatus"></span>
+        </div>
+
+        <div>
+            <label for="email">Email</label><br />
+            <input type="email" id="email" size="30" />
+            <button type="button" id="checkEmailBtn">Check</button>
+            <span id="emailStatus"></span>
+        </div>
+
+        <div>
+            <label for="phone">Phone Number</label><br />
+            <input type="tel" id="phone" size="30" placeholder="e.g. 0704556585 or +254704556585" />
+            <button type="button" id="checkPhoneBtn">Check</button>
+            <span id="phoneStatus"></span>
+        </div>
+
+        <div>
+            <label>Alternative Phone(s)</label><br />
+            <button type="button" id="addAltPhoneBtn">+ Add Alternative Phone</button>
+            <div id="altPhoneContainer"></div>
+        </div>
+
+        <div>
+            <label for="password">Password</label><br />
+            <input type="password" id="password" size="30" autocomplete="new-password" />
+        </div>
+
+        <div>
+            <label for="confirmPassword">Confirm Password</label><br />
+            <input type="password" id="confirmPassword" size="30" autocomplete="new-password" />
+            <span id="passwordMatchStatus"></span>
+        </div>
+
+        <p>
+            <button type="button" id="signupBtn">Create Account</button>
+            <button type="button" id="backFromSignup">← Back</button>
+        </p>
+
+        <div id="signupMessage"></div>
+
+        <hr />
+        <p><small>ver 2.0</small></p>
     </div>
-
-    <style>
-        #signupSubmitBtn, #loginBtn {
-            transition: background-color 0.8s ease, color 0.8s ease;
-        }
-
-        /* Pure color pulsing - no grow/shrink */
-        @keyframes pulseColor {
-            0% { 
-                background-color: #4CAF50; 
-                color: white;
-            }
-            25% { 
-                background-color: #66BB6A; 
-                color: white;
-            }
-            50% { 
-                background-color: #2E7D32; 
-                color: white;
-            }
-            75% { 
-                background-color: #43A047; 
-                color: white;
-            }
-            100% { 
-                background-color: #4CAF50; 
-                color: white;
-            }
-        }
-
-        #signupSubmitBtn.pulsing, #loginBtn.pulsing {
-            animation: pulseColor 1.0s ease-in-out infinite;
-            background-color: #4CAF50;
-            color: white;
-            cursor: wait;
-        }
-
-        .ellipsis::after {
-            content: '';
-            animation: dots 1.5s steps(4, end) infinite;
-        }
-        @keyframes dots {
-            0% { content: ''; }
-            25% { content: '.'; }
-            50% { content: '..'; }
-            75% { content: '...'; }
-            100% { content: ''; }
-        }
-
-        .checking::after {
-            content: '';
-            animation: dots 0.8s steps(4, end) infinite;
-        }
-        .status-available { color: green; }
-        .status-taken { color: red; }
-        .status-checking { color: #ff9800; }
-    </style>
 
     <script>
         (function() {
-            // ===== CONFIGURATION =====
-            const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzzKAmnfCe9O7I56Tb8Fnye-2-GMvpGkyYR574E7uULX2wao9lK77Z9jn6WOiPCZzru/exec';
+            // ============================================================
+            // CONFIG
+            // ============================================================
+            const API_URL = 'https://script.google.com/macros/s/AKfycbzzKAmnfCe9O7I56Tb8Fnye-2-GMvpGkyYR574E7uULX2wao9lK77Z9jn6WOiPCZzru/exec';
 
-            // ===== DOM REFS =====
+            // ============================================================
+            // DOM REFS
+            // ============================================================
+            const welcomeView = document.getElementById('welcomeView');
             const loginView = document.getElementById('loginView');
             const signupView = document.getElementById('signupView');
-            const loginForm = document.getElementById('loginForm');
-            const signupForm = document.getElementById('signupForm');
+
+            const showLoginBtn = document.getElementById('showLoginBtn');
             const showSignupBtn = document.getElementById('showSignupBtn');
-            const cancelSignupBtn = document.getElementById('cancelSignupBtn');
-            const addAltPhoneBtn = document.getElementById('addAltPhoneBtn');
-            const altPhoneContainer = document.getElementById('altPhoneContainer');
+            const backFromLogin = document.getElementById('backFromLogin');
+            const backFromSignup = document.getElementById('backFromSignup');
 
             const loginUsername = document.getElementById('loginUsername');
             const loginPassword = document.getElementById('loginPassword');
-            const loginError = document.getElementById('loginError');
-            const loginStatus = document.getElementById('loginStatus');
             const loginBtn = document.getElementById('loginBtn');
+            const loginMessage = document.getElementById('loginMessage');
 
             const surname = document.getElementById('surname');
             const firstName = document.getElementById('firstName');
@@ -179,485 +149,365 @@
             const phone = document.getElementById('phone');
             const password = document.getElementById('password');
             const confirmPassword = document.getElementById('confirmPassword');
-            const signupError = document.getElementById('signupError');
-            const signupStatus = document.getElementById('signupStatus');
+            const signupBtn = document.getElementById('signupBtn');
+            const signupMessage = document.getElementById('signupMessage');
 
             const usernameStatus = document.getElementById('usernameStatus');
             const emailStatus = document.getElementById('emailStatus');
             const phoneStatus = document.getElementById('phoneStatus');
             const passwordMatchStatus = document.getElementById('passwordMatchStatus');
-            const signupSubmitBtn = document.getElementById('signupSubmitBtn');
 
             const checkUsernameBtn = document.getElementById('checkUsernameBtn');
             const checkEmailBtn = document.getElementById('checkEmailBtn');
             const checkPhoneBtn = document.getElementById('checkPhoneBtn');
+            const addAltPhoneBtn = document.getElementById('addAltPhoneBtn');
+            const altPhoneContainer = document.getElementById('altPhoneContainer');
 
-            let altPhoneCount = 0;
+            // ============================================================
+            // STATE
+            // ============================================================
             let allUsers = [];
-            let isChecking = false;
+            let altPhoneCount = 0;
 
-            // ===== UTILITY FUNCTIONS =====
+            // ============================================================
+            // VIEW SWITCHING
+            // ============================================================
+            function showWelcome() {
+                welcomeView.style.display = 'block';
+                loginView.style.display = 'none';
+                signupView.style.display = 'none';
+                loginMessage.textContent = '';
+                signupMessage.textContent = '';
+            }
+            function showLogin() {
+                welcomeView.style.display = 'none';
+                loginView.style.display = 'block';
+                signupView.style.display = 'none';
+                loginMessage.textContent = '';
+                setTimeout(() => loginUsername.focus(), 50);
+            }
+            function showSignup() {
+                welcomeView.style.display = 'none';
+                loginView.style.display = 'none';
+                signupView.style.display = 'block';
+                signupMessage.textContent = '';
+            }
 
-            function normalizePhone(phoneNum) {
-                if (!phoneNum) return '';
-                if (typeof phoneNum !== 'string') {
-                    phoneNum = String(phoneNum);
-                }
-                
-                let cleaned = phoneNum.replace(/\s/g, '');
-                if (cleaned.startsWith('0') && cleaned.length === 10) {
-                    cleaned = '+254' + cleaned.substring(1);
-                } else if (cleaned.startsWith('0') && cleaned.length === 9) {
-                    cleaned = '+254' + cleaned.substring(1);
-                } else if (cleaned.startsWith('254') && cleaned.length === 12) {
-                    cleaned = '+' + cleaned;
-                }
-                return cleaned;
+            // ============================================================
+            // UTILITIES
+            // ============================================================
+            function normalizePhone(input) {
+                if (!input) return '';
+                let p = input.toString().replace(/\s+/g, '');
+                if (p.startsWith('0') && p.length === 10) p = '+254' + p.substring(1);
+                else if (p.startsWith('254') && p.length === 12) p = '+' + p;
+                return p;
             }
 
             function isUsernameTaken(username) {
                 return allUsers.some(u => u.username && u.username.toLowerCase() === username.toLowerCase());
             }
-
             function isEmailTaken(emailAddr) {
                 return allUsers.some(u => u.email && u.email.toLowerCase() === emailAddr.toLowerCase());
             }
-
             function isPhoneTaken(phoneNum) {
                 const normalized = normalizePhone(phoneNum);
-                return allUsers.some(u => {
-                    if (!u.phone) return false;
-                    const userPhone = normalizePhone(u.phone);
-                    return userPhone === normalized;
-                });
+                return allUsers.some(u => u.phone && normalizePhone(u.phone) === normalized);
             }
 
-            // ===== GENERATE USER ID =====
             function generateUserId() {
-                const randomNum = String(Math.floor(Math.random() * 100000000)).padStart(8, '0');
-                return 'JB' + randomNum + 'K';
+                const num = String(Math.floor(Math.random() * 100000000)).padStart(8, '0');
+                return 'JB' + num + 'K';
             }
 
-            // ===== FETCH USERS =====
+            // ============================================================
+            // FETCH USERS
+            // ============================================================
             async function fetchUsers() {
                 try {
-                    const url = SCRIPT_URL + '?action=getUsers';
-                    const response = await fetch(url);
-                    if (!response.ok) throw new Error('HTTP error! status: ' + response.status);
-                    const data = await response.json();
-                    allUsers = data || [];
+                    const res = await fetch(API_URL + '?action=getUsers');
+                    if (!res.ok) throw new Error('HTTP ' + res.status);
+                    const data = await res.json();
+                    allUsers = Array.isArray(data) ? data : [];
                     return allUsers;
-                } catch (error) {
-                    console.error('Error fetching users:', error);
+                } catch (err) {
+                    console.error('Error fetching users:', err);
                     return [];
                 }
             }
 
-            // ===== CHECK FUNCTIONS =====
+            // ============================================================
+            // AVAILABILITY CHECKS
+            // ============================================================
             async function checkUsername() {
-                if (isChecking) return;
-                isChecking = true;
-
                 const val = signupUsername.value.trim();
-                if (!val) {
-                    usernameStatus.textContent = 'Please enter a username';
-                    usernameStatus.className = 'status-taken';
-                    isChecking = false;
-                    return;
-                }
-
-                usernameStatus.textContent = 'Checking...';
-                usernameStatus.className = 'status-checking checking';
-
+                if (!val) { usernameStatus.textContent = 'Enter a username'; return; }
+                usernameStatus.textContent = 'Checking…';
                 await fetchUsers();
-
                 if (isUsernameTaken(val)) {
-                    usernameStatus.textContent = '❌ Username already taken';
-                    usernameStatus.className = 'status-taken';
+                    usernameStatus.textContent = '❌ Taken';
                 } else {
-                    usernameStatus.textContent = '✅ Username available';
-                    usernameStatus.className = 'status-available';
+                    usernameStatus.textContent = '✅ Available';
                 }
-                isChecking = false;
             }
 
             async function checkEmail() {
-                if (isChecking) return;
-                isChecking = true;
-
                 const val = email.value.trim();
-                if (!val) {
-                    emailStatus.textContent = 'Please enter an email';
-                    emailStatus.className = 'status-taken';
-                    isChecking = false;
-                    return;
-                }
-
-                emailStatus.textContent = 'Checking...';
-                emailStatus.className = 'status-checking checking';
-
+                if (!val) { emailStatus.textContent = 'Enter an email'; return; }
+                emailStatus.textContent = 'Checking…';
                 await fetchUsers();
-
                 if (isEmailTaken(val)) {
-                    emailStatus.textContent = '❌ Email already registered';
-                    emailStatus.className = 'status-taken';
+                    emailStatus.textContent = '❌ Registered';
                 } else {
-                    emailStatus.textContent = '✅ Email available';
-                    emailStatus.className = 'status-available';
+                    emailStatus.textContent = '✅ Available';
                 }
-                isChecking = false;
             }
 
             async function checkPhone() {
-                if (isChecking) return;
-                isChecking = true;
-
                 const val = phone.value.trim();
-                if (!val) {
-                    phoneStatus.textContent = 'Please enter a phone number';
-                    phoneStatus.className = 'status-taken';
-                    isChecking = false;
+                if (!val) { phoneStatus.textContent = 'Enter a phone'; return; }
+                phoneStatus.textContent = 'Checking…';
+                await fetchUsers();
+                if (isPhoneTaken(val)) {
+                    phoneStatus.textContent = '❌ Registered';
+                } else {
+                    phoneStatus.textContent = '✅ Available';
+                }
+            }
+
+            // ============================================================
+            // SIGNUP
+            // ============================================================
+            async function handleSignup() {
+                signupMessage.textContent = '';
+                signupMessage.style.color = '';
+
+                // Basic validation
+                if (!surname.value.trim() || !firstName.value.trim()) {
+                    signupMessage.textContent = 'Surname and First Name are required.';
+                    signupMessage.style.color = 'red';
+                    return;
+                }
+                if (!signupUsername.value.trim() || !email.value.trim() || !phone.value.trim()) {
+                    signupMessage.textContent = 'Username, Email and Phone are required.';
+                    signupMessage.style.color = 'red';
+                    return;
+                }
+                if (!password.value || password.value !== confirmPassword.value) {
+                    signupMessage.textContent = 'Passwords do not match.';
+                    signupMessage.style.color = 'red';
                     return;
                 }
 
-                phoneStatus.textContent = 'Checking...';
-                phoneStatus.className = 'status-checking checking';
-
+                // Availability re-check
                 await fetchUsers();
-
-                const normalizedVal = normalizePhone(val);
-                let taken = false;
-                for (let u of allUsers) {
-                    if (u.phone) {
-                        const userPhone = normalizePhone(u.phone);
-                        if (userPhone === normalizedVal) {
-                            taken = true;
-                            break;
-                        }
-                    }
-                }
-
-                if (taken) {
-                    phoneStatus.textContent = '❌ Phone already registered';
-                    phoneStatus.className = 'status-taken';
-                } else {
-                    phoneStatus.textContent = '✅ Phone available';
-                    phoneStatus.className = 'status-available';
-                }
-                isChecking = false;
-            }
-
-            // ===== VALIDATE SIGNUP =====
-            function validateSignup() {
-                let isValid = true;
-                signupError.textContent = '';
-
-                if (!surname.value.trim()) {
-                    signupError.textContent = 'Surname is required';
-                    return false;
-                }
-                if (!firstName.value.trim()) {
-                    signupError.textContent = 'First Name is required';
-                    return false;
-                }
-                if (!signupUsername.value.trim()) {
-                    signupError.textContent = 'Username is required';
-                    return false;
-                }
-                if (!email.value.trim()) {
-                    signupError.textContent = 'Email is required';
-                    return false;
-                }
-                if (!phone.value.trim()) {
-                    signupError.textContent = 'Phone number is required';
-                    return false;
-                }
-                if (!password.value) {
-                    signupError.textContent = 'Password is required';
-                    return false;
-                }
-                if (password.value !== confirmPassword.value) {
-                    signupError.textContent = 'Passwords do not match';
-                    return false;
-                }
-
                 if (isUsernameTaken(signupUsername.value.trim())) {
-                    signupError.textContent = 'Username is already taken';
-                    usernameStatus.textContent = '❌ Username already taken';
-                    usernameStatus.className = 'status-taken';
-                    isValid = false;
-                } else {
-                    usernameStatus.textContent = '✅ Username available';
-                    usernameStatus.className = 'status-available';
+                    signupMessage.textContent = 'Username already taken.';
+                    signupMessage.style.color = 'red';
+                    return;
                 }
-
                 if (isEmailTaken(email.value.trim())) {
-                    if (isValid) signupError.textContent = '';
-                    signupError.textContent += (signupError.textContent ? ', ' : '') + 'Email is already registered';
-                    emailStatus.textContent = '❌ Email already registered';
-                    emailStatus.className = 'status-taken';
-                    isValid = false;
-                } else {
-                    emailStatus.textContent = '✅ Email available';
-                    emailStatus.className = 'status-available';
+                    signupMessage.textContent = 'Email already registered.';
+                    signupMessage.style.color = 'red';
+                    return;
                 }
-
                 if (isPhoneTaken(phone.value.trim())) {
-                    if (isValid) signupError.textContent = '';
-                    signupError.textContent += (signupError.textContent ? ', ' : '') + 'Phone is already registered';
-                    phoneStatus.textContent = '❌ Phone already registered';
-                    phoneStatus.className = 'status-taken';
-                    isValid = false;
-                } else {
-                    phoneStatus.textContent = '✅ Phone available';
-                    phoneStatus.className = 'status-available';
+                    signupMessage.textContent = 'Phone already registered.';
+                    signupMessage.style.color = 'red';
+                    return;
                 }
 
-                const altPhones = document.querySelectorAll('.alt-phone-input');
-                for (let input of altPhones) {
-                    if (input.value.trim() && isPhoneTaken(input.value.trim())) {
-                        if (isValid) signupError.textContent = '';
-                        signupError.textContent += (signupError.textContent ? ', ' : '') + 'Alternative phone already registered';
-                        const statusSpan = input.parentElement.parentElement.querySelector('.alt-phone-status');
-                        if (statusSpan) {
-                            statusSpan.textContent = '❌ Already registered';
-                            statusSpan.className = 'status-taken';
-                        }
-                        isValid = false;
-                    }
-                }
+                // Collect alternative phones
+                const altPhones = [];
+                document.querySelectorAll('.alt-phone-input').forEach(inp => {
+                    if (inp.value.trim()) altPhones.push(normalizePhone(inp.value.trim()));
+                });
 
-                if (!isValid) {
-                    signupError.textContent = 'Please fix the issues above';
-                    return false;
-                }
+                const userData = {
+                    userId: generateUserId(),
+                    surname: surname.value.trim(),
+                    firstName: firstName.value.trim(),
+                    otherNames: otherNames.value.trim(),
+                    username: signupUsername.value.trim(),
+                    email: email.value.trim(),
+                    phone: normalizePhone(phone.value.trim()),
+                    altPhones: altPhones.join(','),
+                    password: password.value,
+                    createdAt: new Date().toISOString()
+                };
 
-                signupError.textContent = '';
-                return true;
-            }
-
-            // ===== SIGNUP SUBMIT =====
-            async function handleSignup(e) {
-                e.preventDefault();
-
-                // Start pulsing animation
-                signupSubmitBtn.classList.add('pulsing');
-                signupSubmitBtn.textContent = 'Creating Account';
-                signupStatus.innerHTML = 'Creating account<span class="ellipsis"></span>';
+                // Button feedback
+                signupBtn.textContent = 'Creating…';
+                signupBtn.disabled = true;
 
                 try {
-                    await fetchUsers();
-
-                    if (!validateSignup()) {
-                        signupSubmitBtn.classList.remove('pulsing');
-                        signupSubmitBtn.textContent = 'Sign Up';
-                        signupStatus.textContent = '';
-                        return;
-                    }
-
-                    const altPhones = [];
-                    document.querySelectorAll('.alt-phone-input').forEach(input => {
-                        if (input.value.trim()) {
-                            altPhones.push(normalizePhone(input.value.trim()));
-                        }
-                    });
-
-                    const userData = {
-                        userId: generateUserId(),
-                        surname: surname.value.trim(),
-                        firstName: firstName.value.trim(),
-                        otherNames: otherNames.value.trim(),
-                        username: signupUsername.value.trim(),
-                        email: email.value.trim(),
-                        phone: normalizePhone(phone.value.trim()),
-                        altPhones: altPhones.join(','),
-                        password: password.value,
-                        createdAt: new Date().toISOString()
-                    };
-
                     const params = new URLSearchParams();
                     params.append('action', 'signup');
                     params.append('data', JSON.stringify(userData));
-                    const url = SCRIPT_URL + '?' + params.toString();
+                    const url = API_URL + '?' + params.toString();
 
-                    const response = await fetch(url);
-                    if (!response.ok) throw new Error('HTTP error! status: ' + response.status);
-
-                    const result = await response.json();
+                    const res = await fetch(url);
+                    const result = await res.json();
 
                     if (result.success) {
-                        signupStatus.innerHTML = '✅ Account created! Redirecting to login...';
-                        signupSubmitBtn.classList.remove('pulsing');
-                        signupSubmitBtn.textContent = '✓ Account Created!';
+                        // Clear form
+                        document.getElementById('surname').value = '';
+                        document.getElementById('firstName').value = '';
+                        document.getElementById('otherNames').value = '';
+                        document.getElementById('email').value = '';
+                        document.getElementById('phone').value = '';
+                        document.getElementById('password').value = '';
+                        document.getElementById('confirmPassword').value = '';
+                        altPhoneContainer.innerHTML = '';
+                        altPhoneCount = 0;
+                        usernameStatus.textContent = '';
+                        emailStatus.textContent = '';
+                        phoneStatus.textContent = '';
+                        passwordMatchStatus.textContent = '';
 
-                        setTimeout(() => {
-                            signupView.style.display = 'none';
-                            loginView.style.display = 'block';
-                            signupForm.reset();
-                            signupSubmitBtn.textContent = 'Sign Up';
-                            signupSubmitBtn.classList.remove('pulsing');
-                            signupStatus.textContent = '';
-                            altPhoneContainer.innerHTML = '';
-                            altPhoneCount = 0;
-                            usernameStatus.textContent = '';
-                            emailStatus.textContent = '';
-                            phoneStatus.textContent = '';
-                            passwordMatchStatus.textContent = '';
-                            loginError.textContent = 'Account created! Please login.';
-                            loginError.style.color = 'green';
-                            fetchUsers();
-                        }, 1500);
+                        // Prefill login username
+                        loginUsername.value = userData.username;
+                        loginPassword.value = '';
+                        loginMessage.textContent = 'Account created. Please log in.';
+                        loginMessage.style.color = 'green';
+
+                        // Switch to login view
+                        showLogin();
                     } else {
-                        signupError.textContent = result.error || 'Signup failed';
-                        signupSubmitBtn.classList.remove('pulsing');
-                        signupSubmitBtn.textContent = 'Sign Up';
-                        signupStatus.textContent = '';
+                        signupMessage.textContent = result.error || 'Signup failed.';
+                        signupMessage.style.color = 'red';
                     }
-                } catch (error) {
-                    console.error('Signup error:', error);
-                    signupError.textContent = 'Network error: ' + error.message;
-                    signupSubmitBtn.classList.remove('pulsing');
-                    signupSubmitBtn.textContent = 'Sign Up';
-                    signupStatus.textContent = '';
+                } catch (err) {
+                    console.error('Signup error:', err);
+                    signupMessage.textContent = 'Network error: ' + err.message;
+                    signupMessage.style.color = 'red';
+                } finally {
+                    signupBtn.textContent = 'Create Account';
+                    signupBtn.disabled = false;
                 }
             }
 
-            // ===== LOGIN =====
-            async function handleLogin(e) {
-                e.preventDefault();
+            // ============================================================
+            // LOGIN
+            // ============================================================
+            async function handleLogin() {
+                loginMessage.textContent = '';
+                loginMessage.style.color = '';
 
                 const username = loginUsername.value.trim();
-                const password = loginPassword.value.trim();
-
-                if (!username || !password) {
-                    loginError.textContent = 'Please enter username and password';
+                const pwd = loginPassword.value.trim();
+                if (!username || !pwd) {
+                    loginMessage.textContent = 'Please enter username and password.';
+                    loginMessage.style.color = 'red';
                     return;
                 }
 
-                loginError.textContent = '';
+                loginBtn.textContent = 'Logging in…';
+                loginBtn.disabled = true;
 
-                loginBtn.classList.add('pulsing');
-                loginBtn.textContent = 'Logging In';
-                loginStatus.innerHTML = 'Logging in<span class="ellipsis"></span>';
+                if (allUsers.length === 0) await fetchUsers();
 
-                try {
-                    if (allUsers.length === 0) {
-                        await fetchUsers();
-                    }
+                const user = allUsers.find(u =>
+                    u.username && u.username.toLowerCase() === username.toLowerCase() &&
+                    u.password === pwd
+                );
 
-                    const user = allUsers.find(u =>
-                        u.username && u.username.toLowerCase() === username.toLowerCase() &&
-                        u.password === password
-                    );
-
-                    if (user) {
-                        loginStatus.innerHTML = '✅ Login successful! Redirecting...';
-                        sessionStorage.setItem('loggedInUser', JSON.stringify(user));
-
-                        setTimeout(() => {
-                            window.location.href = 'search.html';
-                        }, 1000);
-                    } else {
-                        loginError.textContent = 'Invalid username or password';
-                        loginError.style.color = 'red';
-                        loginBtn.classList.remove('pulsing');
-                        loginBtn.textContent = 'Login';
-                        loginStatus.textContent = '';
-                    }
-                } catch (error) {
-                    console.error('Login error:', error);
-                    loginError.textContent = 'Network error: ' + error.message;
-                    loginBtn.classList.remove('pulsing');
+                if (user) {
+                    localStorage.setItem('loggedInUser', JSON.stringify(user));
+                    loginMessage.textContent = 'Success! Redirecting…';
+                    loginMessage.style.color = 'green';
+                    setTimeout(() => {
+                        window.location.href = 'search.html';
+                    }, 500);
+                } else {
+                    loginMessage.textContent = 'Invalid username or password.';
+                    loginMessage.style.color = 'red';
                     loginBtn.textContent = 'Login';
-                    loginStatus.textContent = '';
+                    loginBtn.disabled = false;
                 }
             }
 
-            // ===== REAL-TIME VALIDATION =====
-            confirmPassword.addEventListener('input', function() {
-                if (this.value && this.value === password.value) {
-                    passwordMatchStatus.textContent = '✅ Passwords match';
-                    passwordMatchStatus.className = 'status-available';
-                } else if (this.value) {
-                    passwordMatchStatus.textContent = '❌ Passwords do not match';
-                    passwordMatchStatus.className = 'status-taken';
-                } else {
-                    passwordMatchStatus.textContent = '';
-                }
-            });
-
-            // ===== ADD ALTERNATIVE PHONE =====
-            addAltPhoneBtn.addEventListener('click', function() {
+            // ============================================================
+            // ALTERNATIVE PHONE INPUTS
+            // ============================================================
+            function addAltPhoneInput() {
                 altPhoneCount++;
-                const div = document.createElement('div');
-                div.style.marginTop = '5px';
-                div.innerHTML = `
-                    <label>Alternative Phone ${altPhoneCount}</label>
-                    <div style="display:flex;gap:5px;align-items:center;max-width:400px;">
-                        <input type="tel" class="alt-phone-input" placeholder="e.g., 0704556585" style="flex:1;" />
-                        <button type="button" class="remove-alt-phone">✕</button>
-                    </div>
-                    <span class="alt-phone-status"></span>
-                `;
-                altPhoneContainer.appendChild(div);
+                const wrapper = document.createElement('div');
+                wrapper.innerHTML =
+                    '<label>Alt Phone ' + altPhoneCount + '</label> ' +
+                    '<input type="tel" class="alt-phone-input" size="20" /> ' +
+                    '<button type="button" class="remove-alt">✕</button> ' +
+                    '<span class="alt-phone-status"></span>';
+                altPhoneContainer.appendChild(wrapper);
 
-                const altInput = div.querySelector('.alt-phone-input');
-                const altStatus = div.querySelector('.alt-phone-status');
-
-                div.querySelector('.remove-alt-phone').addEventListener('click', function() {
-                    altPhoneContainer.removeChild(div);
-                    altPhoneCount--;
+                wrapper.querySelector('.remove-alt').addEventListener('click', function() {
+                    altPhoneContainer.removeChild(wrapper);
                 });
 
-                altInput.addEventListener('blur', function() {
-                    if (this.value.trim()) {
-                        if (isPhoneTaken(this.value.trim())) {
-                            altStatus.textContent = '❌ Already registered';
-                            altStatus.className = 'status-taken';
-                        } else {
-                            altStatus.textContent = '✅ Available';
-                            altStatus.className = 'status-available';
-                        }
+                const inp = wrapper.querySelector('.alt-phone-input');
+                const status = wrapper.querySelector('.alt-phone-status');
+                inp.addEventListener('blur', async function() {
+                    if (!this.value.trim()) { status.textContent = ''; return; }
+                    await fetchUsers();
+                    if (isPhoneTaken(this.value.trim())) {
+                        status.textContent = '❌ Registered';
                     } else {
-                        altStatus.textContent = '';
+                        status.textContent = '✅ Available';
                     }
                 });
-            });
+            }
 
-            // ===== SWITCH VIEWS =====
-            showSignupBtn.addEventListener('click', function() {
-                loginView.style.display = 'none';
-                signupView.style.display = 'block';
-                loginError.textContent = '';
-                loginStatus.textContent = '';
-                fetchUsers();
-            });
+            // ============================================================
+            // EVENT LISTENERS
+            // ============================================================
+            showLoginBtn.addEventListener('click', showLogin);
+            showSignupBtn.addEventListener('click', showSignup);
+            backFromLogin.addEventListener('click', showWelcome);
+            backFromSignup.addEventListener('click', showWelcome);
 
-            cancelSignupBtn.addEventListener('click', function() {
-                signupView.style.display = 'none';
-                loginView.style.display = 'block';
-                signupForm.reset();
-                signupError.textContent = '';
-                signupStatus.textContent = '';
-                usernameStatus.textContent = '';
-                emailStatus.textContent = '';
-                phoneStatus.textContent = '';
-                passwordMatchStatus.textContent = '';
-                altPhoneContainer.innerHTML = '';
-                altPhoneCount = 0;
-                signupSubmitBtn.textContent = 'Sign Up';
-                signupSubmitBtn.classList.remove('pulsing');
-            });
+            loginBtn.addEventListener('click', handleLogin);
+            signupBtn.addEventListener('click', handleSignup);
 
-            // ===== EVENT LISTENERS =====
-            loginForm.addEventListener('submit', handleLogin);
-            signupForm.addEventListener('submit', handleSignup);
             checkUsernameBtn.addEventListener('click', checkUsername);
             checkEmailBtn.addEventListener('click', checkEmail);
             checkPhoneBtn.addEventListener('click', checkPhone);
+            addAltPhoneBtn.addEventListener('click', addAltPhoneInput);
 
-            // ===== INIT =====
+            // Enter key shortcuts
+            loginPassword.addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin(); });
+            loginUsername.addEventListener('keydown', e => { if (e.key === 'Enter') loginPassword.focus(); });
+            confirmPassword.addEventListener('keydown', e => { if (e.key === 'Enter') handleSignup(); });
+
+            // Password match feedback
+            confirmPassword.addEventListener('input', function() {
+                if (!this.value) { passwordMatchStatus.textContent = ''; return; }
+                if (this.value === password.value) {
+                    passwordMatchStatus.textContent = '✅ Match';
+                } else {
+                    passwordMatchStatus.textContent = '❌ Do not match';
+                }
+            });
+
+            // ============================================================
+            // INIT
+            // ============================================================
+            // If already logged in, redirect to search.html
+            const existing = localStorage.getItem('loggedInUser');
+            if (existing) {
+                try {
+                    const user = JSON.parse(existing);
+                    if (user && user.username) {
+                        window.location.href = 'search.html';
+                        return;
+                    }
+                } catch (e) { /* ignore */ }
+            }
+
+            // Pre-fetch users in background
             fetchUsers();
+
+            // Default view
+            showWelcome();
 
         })();
     </script>
