@@ -4,63 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Store Inventory</title>
-    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>Store Inventory</h1>
-            <p class="subtitle" id="status">Connecting...</p>
-        </header>
+    <h1>Store Inventory</h1>
+    <p>Welcome. Please select a mode to begin.</p>
 
-        <div class="search-bar">
-            <input type="text" id="search" placeholder="Search drugs..." autocomplete="off">
-        </div>
-
-        <div class="tabs">
-            <button class="tab active" data-tab="list">Drug List</button>
-            <button class="tab" data-tab="recent">Recent Movements</button>
-        </div>
-
-        <div id="tab-list" class="tab-content active">
-            <table id="drug-table">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Drug</th>
-                        <th>Formulation</th>
-                        <th>Presentation</th>
-                        <th class="num">Store</th>
-                        <th class="num">Office</th>
-                        <th class="num">Total</th>
-                    </tr>
-                </thead>
-                <tbody id="drug-rows">
-                    <tr><td colspan="7" class="empty">Loading...</td></tr>
-                </tbody>
-            </table>
-        </div>
-
-        <div id="tab-recent" class="tab-content">
-            <table id="movement-table">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>ID</th>
-                        <th>Qty</th>
-                        <th>Type</th>
-                        <th>Location</th>
-                        <th>Note</th>
-                    </tr>
-                </thead>
-                <tbody id="movement-rows">
-                    <tr><td colspan="6" class="empty">Loading...</td></tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <script src="Config.js"></script>
-    <script src="App.js"></script>
+    <ul>
+        <li><button disabled>View Inventory (Coming Soon)</button></li>
+        <li><button disabled>Record Movement (Coming Soon)</button></li>
+        <li><button disabled>Reports (Coming Soon)</button></li>
+    </ul>
 </body>
 </html>
